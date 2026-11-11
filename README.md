@@ -6,7 +6,7 @@
 <title>Crypto Gem Hunter 1.0</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef2f1;--card:#fff;--ink:#17302e;--mute:#5d726f;--line:#d5dfdd;--acc:#1f4e79;--ok:#2f7d4f;--warn:#b7791f;--bad:#b3362b;--okb:#e3f2e8;--warnb:#fbf0da;--badb:#f8e2df}
+:root{--bg:#eef2f1;--card:#fff;--ink:#17302e;--mute:#5d726f;--line:#d5dfdd;--acc:#1f4e79;--ok:#2f7d4f;--warn:#b7791f;--bad:#b3362b;--okb:#e3f2e8;--warnb:#fbf0da;--badb:#f8e2df;--hov:#f4f8f7;--sh:0 1px 2px rgba(23,48,46,.06),0 6px 18px rgba(23,48,46,.06)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 'IBM Plex Sans Arabic',system-ui,sans-serif}
 .w{max-width:1180px;margin:auto;padding:20px 16px 60px}
@@ -29,27 +29,68 @@ table{width:100%;border-collapse:collapse;min-width:820px}
 th,td{padding:9px 10px;text-align:start;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:13px;color:var(--mute);font-weight:500}
 td.n{direction:ltr;text-align:end;font-variant-numeric:tabular-nums}
-tr.r{cursor:pointer}tr.r:hover{background:#f4f8f7}
+tr.r{cursor:pointer}tr.r:hover{background:var(--hov)}
 .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:700}
 .ok{background:var(--okb);color:var(--ok)}.wa{background:var(--warnb);color:var(--warn)}.ba{background:var(--badb);color:var(--bad)}
 .sc{display:inline-block;width:46px;height:7px;background:var(--line);border-radius:4px;margin-inline-end:8px;vertical-align:middle;overflow:hidden}
 .sc i{display:block;height:100%;background:var(--acc)}
-.dt td{white-space:normal;background:#f7faf9;font-size:14px}
+.dt td{white-space:normal;background:var(--hov);font-size:14px}
 .dt ul{margin:4px 0;padding-inline-start:20px}.dt li.p{color:var(--ok)}.dt li.m{color:var(--bad)}.dt li.i{color:var(--mute)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 label{display:block;font-size:13px;color:var(--mute)}
-input,select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+input,select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
 .cb{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:14px}.cb input{width:auto}
 .note{font-size:13px;color:var(--mute)}
 a{color:var(--acc)}
 .dir{direction:ltr;display:inline-block}
 @media(prefers-reduced-motion:no-preference){.sc i{transition:width .4s}}
+
+body{background:radial-gradient(900px 340px at 85% -80px,rgba(31,78,121,.14),transparent),var(--bg);min-height:100vh;-webkit-text-size-adjust:100%}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:44px;height:44px;flex:none;background:linear-gradient(135deg,#2b78b6,#1f4e79 55%,#2f7d4f);clip-path:polygon(50% 0,100% 35%,80% 100%,20% 100%,0 35%);filter:drop-shadow(0 4px 8px rgba(31,78,121,.35))}
+.tag2{margin:0;color:var(--mute);font-size:13px}
+h1{letter-spacing:-.2px}
+.box{box-shadow:var(--sh);border-radius:14px}
+.stats div{border-radius:12px;border-top:3px solid var(--acc);box-shadow:var(--sh)}
+.stats div:nth-child(3){border-top-color:var(--ok)}.stats div:nth-child(2){border-top-color:var(--warn)}.stats div:nth-child(4){border-top-color:var(--mute)}
+button{border-radius:10px;min-height:42px;box-shadow:0 2px 6px rgba(31,78,121,.25);transition:transform .12s,filter .12s}
+button:hover{filter:brightness(1.08)}button:active{transform:scale(.97)}button.g{box-shadow:none;background:var(--card)}
+.tag::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;margin-inline-end:6px}
+.sc{width:56px;height:8px}
+thead th{position:sticky;top:0;background:var(--card)}
+input,select{min-height:40px;border-radius:8px}
+.mt{display:none}
+.lg td:last-child{white-space:normal}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1a19;--card:#15242a;--ink:#e4efed;--mute:#97aeaa;--line:#274046;--acc:#6fb1e6;--ok:#6fd09a;--warn:#e8b857;--bad:#f0877c;--okb:#173a2a;--warnb:#3b3017;--badb:#40201d;--hov:#1b2f36;--sh:0 1px 2px rgba(0,0,0,.4)}button{color:#0e1a19}button.g{color:var(--acc)}a{color:var(--acc)}}
+@media(max-width:720px){
+ .w{padding:14px 12px calc(96px + env(safe-area-inset-bottom,0px))}
+ h1{font-size:22px}.logo{width:38px;height:38px}
+ header{margin-bottom:12px}
+ header .bar{position:fixed;inset:auto 0 0 0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:8px;box-shadow:0 -6px 18px rgba(0,0,0,.12)}
+ header .bar button{padding:10px 6px;font-size:14px}
+ .stats{grid-template-columns:1fr 1fr}.stats b{font-size:22px}
+ .box.res{background:transparent;border:0;box-shadow:none;padding:0}
+ .box.res h2,.box.res>.note{padding:0 4px}
+ .tw{overflow:visible}
+ table{min-width:0}table,tbody,tr,td{display:block}thead{display:none}
+ tr.r{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+ tr.r td{border:0;padding:0;white-space:normal}
+ td.c1{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+ td.c1 b{font-size:18px}td.c8{display:none}.mt{display:inline-block;margin-inline-start:auto}
+ td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--mute)}
+ td.n{direction:ltr;text-align:right}
+ tr.dt{margin:-4px 0 12px;border:1px solid var(--line);border-radius:12px;background:var(--hov)}
+ .dt td{display:block;padding:12px 14px;word-break:break-all}
+ tr.lg{padding:10px 4px;border-bottom:1px solid var(--line)}tr.lg td{border:0;padding:0}
+ .grid{grid-template-columns:1fr 1fr}
+}
+@media(min-width:1100px){.w{padding-top:32px}h1{font-size:30px}.stats b{font-size:28px}}
 </style>
 </head>
 <body>
 <div class="w">
 <header>
- <h1>Crypto Gem Hunter<small>الإصدار 1.0</small></h1>
+ <div class="brand"><span class="logo" aria-hidden="true"></span><div><h1>Crypto Gem Hunter<small>1.0</small></h1><p class="tag2">فرز العملات الجديدة وفحص أمانها</p></div></div>
  <div class="bar">
   <button id="go">افحص الآن</button>
   <button class="g" id="auto">التحديث التلقائي: متوقف</button>
@@ -64,7 +105,7 @@ a{color:var(--acc)}
  <div><b id="s4">—</b><span>آخر تحديث</span></div>
 </div>
 
-<div class="box">
+<div class="box res">
  <h2>النتائج مرتبة بالتقييم</h2>
  <div class="tw"><table>
   <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية</th><th>السيولة</th><th>حجم 24س</th><th>التقييم</th><th>القرار</th></tr></thead>
@@ -196,7 +237,7 @@ function score(p,sec,c){
 // الفحص
 async function run(){
  const c=cfg(),log=[],cand=[];
- $('go').disabled=true;$('st').textContent='جلب أحدث الرموز…';
+ $('go').disabled=true;$('go').textContent='جارٍ الفحص…';$('st').textContent='جلب أحدث الرموز…';
  try{
   const [pr,bo]=await Promise.all([fj('https://api.dexscreener.com/token-profiles/latest/v1'),fj('https://api.dexscreener.com/token-boosts/latest/v1').catch(()=>[])]);
   const seen=new Set(),list=[];
@@ -235,15 +276,15 @@ async function run(){
   render(results,log,sel.length);
   $('st').textContent='اكتمل الفحص. المصادر: DEX Screener وGoPlus وRugCheck.';
  }catch(e){$('st').textContent='تعذر الجلب: '+e.message+'. تحقق من الاتصال وأعد المحاولة.'}
- $('go').disabled=false;
+ $('go').disabled=false;$('go').textContent='افحص الآن';
 }
 function render(res,log,tot){
  const shown=res.filter(x=>!(cfg().sec&&x.r.hard.length));
  $('s1').textContent=tot;$('s2').textContent=res.length;$('s3').textContent=res.filter(x=>x.r.d==='مرشح قوي').length;
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});
- $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span>${r.s}</td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join(''):'<tr><td colspan="8" class="note">لم يجتز أي رمز الفلاتر. خفّف الحدود في الإعدادات.</td></tr>';
+ $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td class="c1"><b>${esc(p.baseToken.symbol)}</b><span class="note nm">${esc(p.baseToken.name)}</span><span class="tag mt ${r.cls}">${r.d}${r.verified?'':' · أمان غير مؤكد'}</span></td><td data-l="الشبكة">${esc(p.chainId)}</td><td data-l="السعر" class="n">${price(p.priceUsd)}</td><td data-l="القيمة السوقية" class="n">${money(p.marketCap||p.fdv)}</td><td data-l="السيولة" class="n">${money(p.liquidity?.usd)}</td><td data-l="حجم 24س" class="n">${money(p.volume?.h24)}</td><td data-l="التقييم"><span class="sc"><i style="width:${r.s}%;background:var(--${r.s>=70?'ok':r.s>=45?'warn':'bad'})"></i></span>${r.s}</td><td class="c8"><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join(''):'<tr><td colspan="8" class="note">لم يجتز أي رمز الفلاتر. خفّف الحدود في الإعدادات.</td></tr>';
  document.querySelectorAll('tr.r').forEach(tr=>{const f=()=>{const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dt')){nx.remove();return}const {p,r}=shown[tr.dataset.i];const li=(a,c)=>a.map(x=>`<li class="${c}">${esc(x)}</li>`).join('');tr.insertAdjacentHTML('afterend',`<tr class="dt"><td colspan="8"><ul>${li(r.hard,'m')}${li(r.pro,'p')}${li(r.con,'i')}</ul><a href="${esc(p.url)}" target="_blank" rel="noopener">فتح الرسم على DEX Screener</a> · <span class="dir">${esc(p.baseToken.address)}</span></td></tr>`)};tr.onclick=f;tr.onkeydown=e=>{if(e.key==='Enter')f()}});
- $('log').innerHTML=log.length?log.map(l=>`<tr><td>${esc(l[0])}</td><td>${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
+ $('log').innerHTML=log.length?log.map(l=>`<tr class="lg"><td class="c1"><b>${esc(l[0])}</b> <span class="note">${esc(l[1])}</span></td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
 }
 $('go').onclick=run;
 $('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='التحديث التلقائي: متوقف'}else{timer=setInterval(run,9e5);$('auto').textContent='التحديث التلقائي: كل 15 دقيقة';run()}};
