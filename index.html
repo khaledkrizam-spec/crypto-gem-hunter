@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto Gem Hunter</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--panel2:#18233b;--line:#263451;--txt:#edf3ff;--muted:#9aabc8;--green:#35d39a;--red:#ff6b78;--yellow:#f6c65b;--blue:#6aa8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% -10%,#1b3152 0,transparent 35%),var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1250px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:45px;height:45px;border-radius:14px;background:linear-gradient(135deg,#35d39a,#438cff);display:grid;place-items:center;color:#07111f;font-weight:900;font-size:20px}
+h1{font-size:22px;margin:0}p{margin:4px 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{border:1px solid var(--line);background:#1a2944;color:var(--txt);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:650}
+button.primary{background:var(--green);color:#071a17;border:0}button:disabled{opacity:.5;cursor:wait}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+.stat,.panel{background:linear-gradient(180deg,#15213a,#10192b);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat small{color:var(--muted)}.stat strong{display:block;font-size:24px;margin-top:7px}
+.layout{display:grid;grid-template-columns:1.5fr .8fr;gap:14px}.panel h2{font-size:16px;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{font-size:11px;padding:4px 8px;border-radius:20px;background:#263653;color:#c9d8f3}.good{color:var(--green)}.warn{color:var(--yellow)}.bad{color:var(--red)}
+.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;background:#0c1425;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th{color:var(--muted);font-weight:600}
+.token{font-weight:750}.sub{font-size:11px;color:var(--muted);direction:ltr;text-align:right}.score{font-weight:800;color:var(--green)}
+.tablewrap{overflow:auto}.note{font-size:12px;color:var(--muted);line-height:1.8}.status{padding:9px 11px;background:#0c1425;border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted);margin:12px 0}
+.tag{font-size:11px;padding:4px 7px;border-radius:7px}.tag.pass{background:#103c32;color:#6de5bb}.tag.review{background:#463817;color:#ffdc82}.tag.fail{background:#451d29;color:#ff9aa4}
+.footer{margin:18px 0;color:var(--muted);font-size:11px;line-height:1.8}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.wrap{padding:13px}h1{font-size:19px}}
+@media(max-width:480px){.grid{gap:8px}.stat{padding:12px}.stat strong{font-size:20px}.controls{grid-template-columns:1fr}}
+</style></head>
+<body><div class="wrap">
+<header class="top">
+ <div class="brand"><div class="logo">G</div><div><h1>Crypto Gem Hunter</h1><p>مكتشف العملات المبكرة · إصدار تجريبي 0.1</p></div></div>
+ <div class="actions"><button id="scanBtn" class="primary">⌕ افحص الآن</button><button id="autoBtn">التحديث التلقائي: متوقف</button></div>
+</header>
+<div class="status" id="status">جاهز للفحص. مصدر البيانات: واجهة DEX Screener العامة. يبدأ المسح عند الضغط على «افحص الآن».</div>
+<section class="grid">
+ <div class="stat"><small>العملات التي جرى فحصها</small><strong id="scanned">—</strong></div>
+ <div class="stat"><small>اجتازت الفلاتر الأولية</small><strong id="passed">—</strong></div>
+ <div class="stat"><small>مرشحو القائمة المختصرة</small><strong id="shortlist">—</strong></div>
+ <div class="stat"><small>آخر تحديث</small><strong id="last" style="font-size:15px">—</strong></div>
+</section>
+<div class="layout">
+ <main class="panel">
+  <div class="row"><h2>أفضل الفرص المرشحة</h2><span class="pill">ترتيب حسب التقييم المتاح</span></div>
+  <div class="tablewrap"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية</th><th>السيولة</th><th>حجم 24س</th><th>التقييم</th><th>الحالة</th></tr></thead><tbody id="results"><tr><td colspan="8" class="note">لا توجد نتائج بعد. ابدأ الفحص لجلب البيانات الحية.</td></tr></tbody></table></div>
+  <div class="footer">النتائج مرشحات أولية وليست توصيات شراء. بيانات الحائزين وتوزيع المحافظ والعقد والتوافق الشرعي والارتباطات المؤسسية لا يمكن إثباتها من DEX Screener وحده.</div>
+ </main>
+ <aside class="panel">
+  <h2>إعدادات الفحص</h2>
+  <div class="controls">
+   <div><label>أقل سيولة بالدولار</label><input id="minLiq" type="number" value="50000"></div>
+   <div><label>أقل حجم تداول 24س</label><input id="minVol" type="number" value="100000"></div>
+   <div><label>أقل قيمة سوقية</label><input id="minMcap" type="number" value="1000000"></div>
+   <div><label>أعلى قيمة سوقية</label><input id="maxMcap" type="number" value="25000000"></div>
+   <div><label>أقصى عمر للزوج (أيام)</label><input id="maxAge" type="number" value="30"></div>
+   <div><label>عدد الملفات الأحدث لجلبها</label><select id="batch"><option>10</option><option selected>20</option><option>30</option><option>40</option></select></div>
+  </div>
+  <hr style="border-color:var(--line);margin:16px 0">
+  <h2>قواعد الاستبعاد</h2>
+  <div class="note">
+   <div>✓ استبعاد رموز المحفظة المسجلة</div>
+   <div>✓ كلمات DeFi المعروفة في الاسم والوصف</div>
+   <div>✓ سيولة وحجم تداول أقل من الحدود</div>
+   <div>! فحص العقد/توزيع الحائزين يحتاج مصادر إضافية</div>
+   <div>! الصلة الإسرائيلية والشرعية: مراجعة موثقة، لا تخمين آلي</div>
+  </div>
+  <div style="margin-top:15px"><label>إضافة رموز أخرى لاستبعادها (افصل بفواصل)</label><input id="extraExclude" placeholder="مثال: ABC, XYZ"></div>
+  <div class="status">قائمة المحفظة المبدئية: APT, ZRO, SEI, AR, GALA, PYR, FLOKI, NEIRO, CETUS.</div>
+  <button id="saveBtn" style="width:100%;margin-top:10px">حفظ الإعدادات على هذا الجهاز</button>
+ </aside>
+</div>
+<section class="panel" style="margin-top:14px">
+ <div class="row"><h2>سجل الفحص والاستبعادات</h2><span class="pill">شفافية القرار</span></div>
+ <div class="tablewrap"><table><thead><tr><th>العملة</th><th>سبب القرار</th><th>تغطية البيانات</th><th>رابط المصدر</th></tr></thead><tbody id="log"><tr><td colspan="4" class="note">سيظهر هنا سبب قبول أو استبعاد كل أصل بعد الفحص.</td></tr></tbody></table></div>
+</section>
+<div class="footer">
+<strong>ملاحظات مهمة للنسخة الأولية:</strong><br>
+1) يعتمد النموذج على أحدث Token Profiles ثم يجلب أزواج التداول لكل رمز من DEX Screener. تغطية الشبكات تعتمد على ما توفره واجهة المصدر، وليست مسحاً شاملاً لكل عقد أُنشئ على كل بلوكتشين.<br>
+2) لا يمكن استنتاج عدد الحائزين أو صلاحيات العقد أو ملكية المحافظ من بيانات السوق وحدها؛ لذلك لا يمنح النظام هذه المؤشرات درجة أمان وهمية.<br>
+3) فلتر DeFi بالكلمات المفتاحية أولي وقد يخطئ. أما الارتباط الإسرائيلي والتوافق الشرعي فلا يصدر التطبيق حكماً تلقائياً دون أدلة ومراجعة.<br>
+4) التحديث كل 15 دقيقة يعمل ما دامت الصفحة مفتوحة والجهاز يسمح بالتشغيل. للنشر الدائم نحتاج خادماً مجدولاً وقاعدة بيانات وتنبيهات مستقلة.<br>
+5) لا توجد أي وظيفة شراء أو اتصال بالمحفظة أو حفظ مفاتيح خاصة.
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const holdings=new Set(["APT","ZRO","SEI","AR","GALA","PYR","FLOKI","NEIRO","CETUS"]);
+const defiWords=/\b(defi|dex|swap|exchange|lending|borrow|yield|farm|staking|liquid staking|vault|amm|perp|perpetual|bridge|restaking)\b/i;
+let timer=null, busy=false, lastData=[];
+const num=(v)=>Number(v||0);
+const money=v=>!Number.isFinite(v)||v<=0?"—":v>=1e9?"$"+(v/1e9).toFixed(2)+"B":v>=1e6?"$"+(v/1e6).toFixed(2)+"M":v>=1e3?"$"+(v/1e3).toFixed(1)+"K":"$"+v.toFixed(4);
+const ageDays=ms=>ms?((Date.now()-ms)/86400000):null;
+function settings(){return {liq:num($("minLiq").value),vol:num($("minVol").value),mincap:num($("minMcap").value),maxcap:num($("maxMcap").value),age:num($("maxAge").value),batch:num($("batch").value),extra:$("extraExclude").value.toUpperCase().split(",").map(x=>x.trim()).filter(Boolean)}}
+function score(p){
+ const liq=num(p.liquidity?.usd),vol=num(p.volume?.h24),buys=num(p.txns?.h24?.buys),sells=num(p.txns?.h24?.sells),tx=buys+sells;
+ const ch=num(p.priceChange?.h1),age=ageDays(p.pairCreatedAt);
+ let s=0;
+ s+=Math.min(20,liq/25000*5);
+ s+=Math.min(20,vol/100000*8);
+ s+=Math.min(15,tx/500*10);
+ const ratio=tx?buys/tx:0;s+=Math.max(0,Math.min(15,(ratio-.35)*40));
+ s+=Math.max(0,Math.min(15,(ch+5)*1.5));
+ s+=age===null?0:Math.max(0,Math.min(15,(30-age)/2));
+ return Math.round(Math.min(100,s));
+}
+async function getJson(url){const r=await fetch(url,{headers:{accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status+" for "+url);return r.json()}
+async function scan(){
+ if(busy)return;busy=true;$("scanBtn").disabled=true;$("status").textContent="جارٍ جلب أحدث ملفات العملات وأزواج التداول…";
+ try{
+  const profiles=await getJson("https://api.dexscreener.com/token-profiles/latest/v1");
+  const arr=Array.isArray(profiles)?profiles:[];const seen=new Set(),unique=[];
+  for(const p of arr){const k=(p.chainId||"")+"|"+(p.tokenAddress||"");if(p.chainId&&p.tokenAddress&&!seen.has(k)){seen.add(k);unique.push(p)}}
+  const candidates=unique.slice(0,settings().batch);let pairs=[];
+  for(let i=0;i<candidates.length;i++){
+   const p=candidates[i];
+   try{const data=await getJson(`https://api.dexscreener.com/token-pairs/v1/${encodeURIComponent(p.chainId)}/${encodeURIComponent(p.tokenAddress)}`);
+    if(Array.isArray(data))pairs.push(...data);
+   }catch(e){}
+   $("status").textContent=`جارٍ الفحص… ${i+1} من ${candidates.length}`;
+  }
+  const best=new Map();
+  for(const p of pairs){const a=p.baseToken||{},sym=(a.symbol||"").toUpperCase(),name=a.name||"",desc=(p.info?.websites||[]).map(x=>x.url).join(" ");
+   const key=(p.chainId||"")+"|"+(a.address||"");if(!a.address)continue;
+   if(!best.has(key)||num(p.liquidity?.usd)>num(best.get(key).liquidity?.usd))best.set(key,p);
+  }
+  const st=settings(), all=[...best.values()], decisions=[];
+  for(const p of all){
+   const t=p.baseToken||{},sym=(t.symbol||"").toUpperCase(),name=t.name||"",textBlob=[name,sym].join(" ");
+   let reason="اجتاز الفلاتر السوقية الأولية",status="review";
+   if(holdings.has(sym)||st.extra.includes(sym)){reason="عملة موجودة في قائمة الاستبعاد/المحفظة";status="fail"}
+   else if(defiWords.test(textBlob)){reason="اشتباه تصنيف DeFi من الاسم/الرمز — يحتاج تأكيداً";status="fail"}
+   else if(num(p.liquidity?.usd)<st.liq){reason="السيولة أقل من الحد المحدد";status="fail"}
+   else if(num(p.volume?.h24)<st.vol){reason="حجم التداول أقل من الحد المحدد";status="fail"}
+   else if(num(p.marketCap||p.fdv)<st.mincap||num(p.marketCap||p.fdv)>st.maxcap){reason="القيمة السوقية خارج النطاق المحدد أو غير متاحة";status="fail"}
+   else if(ageDays(p.pairCreatedAt)===null||ageDays(p.pairCreatedAt)>st.age){reason="عمر زوج التداول خارج النطاق أو غير متاح";status="fail"}
+   const sc=score(p);
+   if(status!=="fail"&&sc<45){reason="اجتاز الحدود الأساسية لكن الزخم/البيانات غير كافية";status="review"}
+   decisions.push({p,sc,reason,status});
+  }
+  const eligible=decisions.filter(x=>x.status!=="fail").sort((a,b)=>b.sc-a.sc);
+  lastData=eligible.slice(0,5);
+  $("scanned").textContent=all.length;$("passed").textContent=eligible.length;$("shortlist").textContent=lastData.length;
+  $("last").textContent=new Date().toLocaleTimeString("ar-AE",{hour:"2-digit",minute:"2-digit"});
+  $("results").innerHTML=lastData.length?lastData.map(x=>{
+   const p=x.p,t=p.baseToken||{},cap=p.marketCap||p.fdv;
+   return `<tr><td><div class="token">${esc(t.name||"Unknown")} (${esc(t.symbol||"—")})</div><div class="sub">${esc((t.address||"").slice(0,7))}…${esc((t.address||"").slice(-5))}</div></td><td>${esc(p.chainId||"—")}</td><td>${p.priceUsd?"$"+Number(p.priceUsd).toPrecision(5):"—"}</td><td>${money(cap)}</td><td>${money(num(p.liquidity?.usd))}</td><td>${money(num(p.volume?.h24))}</td><td class="score">${x.sc}/100</td><td><span class="tag review">مراجعة لازمة</span></td></tr>`;
+  }).join(""):`<tr><td colspan="8" class="note">لم تظهر عملات تجتاز الحدود الحالية. جرّب توسيع الفلاتر.</td></tr>`;
+  $("log").innerHTML=decisions.sort((a,b)=>b.sc-a.sc).slice(0,35).map(x=>{const t=x.p.baseToken||{};return `<tr><td>${esc(t.name||"—")} (${esc(t.symbol||"—")})</td><td>${esc(x.reason)}</td><td>السوق: متاح · الحائزون/العقد/الشرعي/الارتباط: غير متحقق</td><td><a style="color:#8dbbff" href="${esc(x.p.url||"#")}" target="_blank" rel="noopener">DEX Screener</a></td></tr>`}).join("")||`<tr><td colspan="4">لا توجد أزواج متاحة من ملفات المصدر الحالية.</td></tr>`;
+  $("status").textContent=`اكتمل الفحص: ${all.length} زوجاً فريداً، ${eligible.length} مرشحاً أولياً. جميع النتائج المختصرة تتطلب مراجعة مخاطر مستقلة.`;
+ }catch(e){$("status").textContent="تعذر إكمال الفحص: "+e.message+" — تحقق من اتصال الإنترنت أو حاول لاحقاً."}
+ finally{busy=false;$("scanBtn").disabled=false}
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("scanBtn").onclick=scan;
+$("autoBtn").onclick=()=>{
+ if(timer){clearInterval(timer);timer=null;$("autoBtn").textContent="التحديث التلقائي: متوقف";$("status").textContent="تم إيقاف التحديث التلقائي."}
+ else{timer=setInterval(scan,15*60*1000);$("autoBtn").textContent="التحديث التلقائي: يعمل";$("status").textContent="التحديث التلقائي يعمل كل 15 دقيقة ما دامت الصفحة مفتوحة.";scan()}
+};
+$("saveBtn").onclick=()=>{
+ const s=settings();localStorage.setItem("cgh-settings",JSON.stringify(s));$("status").textContent="تم حفظ حدود الفحص محلياً على هذا الجهاز.";
+};
+try{const s=JSON.parse(localStorage.getItem("cgh-settings")||"null");if(s){$("minLiq").value=s.liq;$("minVol").value=s.vol;$("minMcap").value=s.mincap;$("maxMcap").value=s.maxcap;$("maxAge").value=s.age;$("batch").value=String(s.batch);$("extraExclude").value=(s.extra||[]).join(", ")} }catch(e){}
+</script></body></html>
