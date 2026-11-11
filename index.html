@@ -44,12 +44,43 @@ input,select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radi
 a{color:var(--acc)}
 .dir{direction:ltr;display:inline-block}
 @media(prefers-reduced-motion:no-preference){.sc i{transition:width .4s}}
+
+/* Crypto Gem Hunter 2.0 visual refresh */
+:root{--bg:#07111f;--card:#101d30;--ink:#e8f0fb;--mute:#91a4bd;--line:#233650;--acc:#4da3ff;--ok:#42d392;--warn:#f5bd4f;--bad:#ff6b75;--okb:#123b32;--warnb:#46351b;--badb:#48242c}
+body{background:radial-gradient(ellipse at 15% 0%,#142d4b 0,transparent 42%),linear-gradient(150deg,#07111f,#0a1627 65%,#0c1c2e);color:var(--ink);min-height:100vh}
+.w{max-width:1320px;padding:28px 20px 70px}
+header{padding:22px 24px;border:1px solid #294361;border-radius:18px;background:linear-gradient(115deg,rgba(25,55,87,.94),rgba(13,28,47,.96));box-shadow:0 18px 55px #0004}
+h1{font-size:clamp(23px,3vw,34px);letter-spacing:-.5px}h1 small{color:#9eb9d8}
+.box,.stats div{background:linear-gradient(145deg,rgba(17,32,52,.97),rgba(12,25,42,.97));border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px #0002}
+.box{padding:20px;margin-bottom:18px}
+.stats div{padding:16px 18px}.stats b{font-size:27px;color:#f4f8ff}
+button{background:linear-gradient(135deg,#287bd0,#4ba6ff);border-radius:10px;padding:10px 18px;box-shadow:0 5px 16px #1674c433}
+button.g{background:#142943;color:#b8d9ff;border:1px solid #345575;box-shadow:none}
+input,select{background:#0a1728;color:var(--ink);border:1px solid #314966;border-radius:9px;padding:10px}
+input::placeholder{color:#7186a0}
+th,td{border-bottom:1px solid #223750;padding:12px 10px}
+th{color:#9db2cb}tr.r:hover{background:#162b43}
+.dt td{background:#0b192b}.tag{padding:4px 11px}
+.note{color:#93a7c0}a{color:#78bcff}
+.sc{background:#243b55}.sc i{background:linear-gradient(90deg,#2588e5,#60c5ff)}
+#st{padding:9px 13px;border-radius:10px;background:#0e2035;border:1px solid #233b57}
+h2{font-size:19px;color:#f1f6ff}
+.grid{gap:14px}
+.cb{margin:8px 0}
+@media(max-width:650px){.w{padding:12px 10px 45px}header{padding:17px}.box{padding:14px}h1{font-size:23px}.bar button{flex:1}}
+.panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.result-card{background:#0b192b;border:1px solid #29415e;border-radius:13px;padding:15px;margin-top:12px;overflow-wrap:anywhere}
+.result-card .big{font-size:19px;font-weight:700}
+.pill{display:inline-block;border:1px solid #34516f;border-radius:99px;padding:3px 9px;font-size:12px;color:#b9d8f7;margin:3px}
+.riskline{padding:8px 10px;border-radius:8px;margin:6px 0;background:#14283e}
+.riskline.bad{background:#3d2029;color:#ffb7bd}.riskline.good{background:#12372f;color:#a8f0d0}.riskline.info{background:#3b301c;color:#f7d999}
+
 </style>
 </head>
 <body>
 <div class="w">
 <header>
- <h1>Crypto Gem Hunter<small>الإصدار 1.0</small></h1>
+ <h1>Crypto Gem Hunter<small>الإصدار 2.0</small></h1>
  <div class="bar">
   <button id="go">افحص الآن</button>
   <button class="g" id="auto">التحديث التلقائي: متوقف</button>
@@ -91,6 +122,32 @@ a{color:var(--acc)}
  <label class="cb"><input type="checkbox" id="fSec" checked> استبعاد الرمز عند فشل أي فحص أمان حرج</label>
  <label class="cb"><input type="checkbox" id="fDefi" checked> استبعاد مشاريع DeFi وأموال الاستقرار بالكلمات المفتاحية</label>
  <p><button class="g" id="save">حفظ الإعدادات</button></p>
+</div>
+
+
+<div class="box" id="contractBox">
+ <h2>فاحص العقد الذكي — تحقق قبل أن تثق</h2>
+ <p class="note">الصق عنوان العقد واختر الشبكة. سنبحث عن تطابق العنوان حرفياً في بيانات التداول، ثم نعرض بيانات الرمز ومؤشرات الأمان المتاحة.</p>
+ <div class="grid">
+  <label>الشبكة
+   <select id="checkChain">
+    <option value="solana">Solana</option><option value="ethereum">Ethereum</option><option value="bsc">BNB Chain (BSC)</option><option value="base">Base</option><option value="arbitrum">Arbitrum</option><option value="polygon">Polygon</option><option value="avalanche">Avalanche</option><option value="optimism">Optimism</option>
+   </select>
+  </label>
+  <label>عنوان العقد
+   <input id="checkAddress" placeholder="الصق عنوان العقد هنا" autocomplete="off" spellcheck="false">
+  </label>
+  <label>اسم/رمز العملة المتوقع (اختياري)
+   <input id="expectedSymbol" placeholder="مثال: ABC أو اسم المشروع">
+  </label>
+ </div>
+ <p><button id="verifyContract">تحقق من العقد</button> <button class="g" id="clearContract">مسح</button></p>
+ <div id="contractResult" aria-live="polite"><p class="note">لم يتم فحص أي عقد بعد.</p></div>
+</div>
+<div class="box" id="newPoolsBox">
+ <div class="bar" style="justify-content:space-between"><h2>رادار المجمعات الجديدة</h2><button id="newPoolsBtn" class="g">جلب أحدث المجمعات</button></div>
+ <p class="note">مصدر إضافي لاكتشاف مجمعات تداول حديثة عبر GeckoTerminal. حداثة المجمع لا تعني جودة العملة؛ افحص العقد والسيولة قبل أي قرار.</p>
+ <div id="newPoolsResults"><p class="note">اضغط «جلب أحدث المجمعات» لعرض فرص حديثة.</p></div>
 </div>
 
 <div class="box">
@@ -248,6 +305,68 @@ function render(res,log,tot){
 $('go').onclick=run;
 $('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='التحديث التلقائي: متوقف'}else{timer=setInterval(run,9e5);$('auto').textContent='التحديث التلقائي: كل 15 دقيقة';run()}};
 $('csv').onclick=()=>{if(!results.length)return;const h='symbol,chain,price,mcap,liquidity,vol24h,score,decision,address\n';const b=results.map(({p,r})=>[p.baseToken.symbol,p.chainId,p.priceUsd,p.marketCap||p.fdv,p.liquidity?.usd,p.volume?.h24,r.s,r.d,p.baseToken.address].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+b],{type:'text/csv'}));a.download='gem-hunter.csv';a.click()};
+
+const EXPLORERS={solana:'https://solscan.io/token/',ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'};
+const NETWORK_NAMES={solana:'Solana',ethereum:'Ethereum',bsc:'BNB Chain',base:'Base',arbitrum:'Arbitrum',polygon:'Polygon',avalanche:'Avalanche',optimism:'Optimism'};
+function sameAddress(a,b,chain){return chain==='solana'?a===b:a.toLowerCase()===b.toLowerCase()}
+function validAddress(a,chain){if(chain==='solana')return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);return /^0x[a-fA-F0-9]{40}$/.test(a)}
+function explorerLink(chain,address){return EXPLORERS[chain]+encodeURIComponent(address)}
+function showRisk(sec){
+ if(!sec)return '<div class="riskline info">تعذر الحصول على تقرير أمان موثوق لهذه الشبكة أو العقد. النتيجة غير مكتملة.</div>';
+ let out='';
+ (sec.bad||[]).forEach(x=>out+='<div class="riskline bad">⚠ '+esc(x)+'</div>');
+ (sec.good||[]).forEach(x=>out+='<div class="riskline good">✓ '+esc(x)+'</div>');
+ (sec.info||[]).forEach(x=>out+='<div class="riskline info">ℹ '+esc(x)+'</div>');
+ if(!out)out='<div class="riskline info">لم ترجع خدمة الفحص مؤشرات كافية؛ لا تعتبر ذلك إثباتاً للأمان.</div>';
+ return out;
+}
+$('clearContract').onclick=()=>{$('checkAddress').value='';$('expectedSymbol').value='';$('contractResult').innerHTML='<p class="note">تم مسح الحقول.</p>'};
+$('verifyContract').onclick=async()=>{
+ const chain=$('checkChain').value,address=$('checkAddress').value.trim(),expected=$('expectedSymbol').value.trim().toLowerCase();
+ const box=$('contractResult'),btn=$('verifyContract');
+ if(!validAddress(address,chain)){box.innerHTML='<div class="riskline bad">عنوان العقد لا يبدو بصيغة صحيحة لهذه الشبكة. راجع الشبكة والعنوان.</div>';return}
+ btn.disabled=true;btn.textContent='جارٍ التحقق…';box.innerHTML='<p class="note">نبحث عن العنوان في بيانات السوق ونفحص المخاطر المتاحة…</p>';
+ try{
+  let pairs=[];
+  try{const q=await fj('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(address));pairs=q.pairs||[]}catch(e){}
+  pairs=pairs.filter(p=>p.chainId===chain&&(sameAddress(p.baseToken.address,address,chain)||sameAddress(p.quoteToken.address,address,chain)));
+  if(!pairs.length){
+   try{const q=await fj('https://api.dexscreener.com/token-pairs/v1/'+chain+'/'+encodeURIComponent(address));pairs=(Array.isArray(q)?q:[]).filter(p=>p.chainId===chain&&(sameAddress(p.baseToken.address,address,chain)||sameAddress(p.quoteToken.address,address,chain)))}catch(e){}
+  }
+  if(!pairs.length){
+   box.innerHTML='<div class="result-card"><div class="riskline info">لم نعثر على زوج تداول يطابق هذا العنوان حرفياً على '+NETWORK_NAMES[chain]+'. قد يكون العقد جديداً جداً أو غير مدرج أو أن الشبكة/العنوان غير صحيح.</div><p><b>العقد المدخل:</b></p><code class="dir">'+esc(address)+'</code><p><a target="_blank" rel="noopener" href="'+explorerLink(chain,address)+'">افتح العنوان في مستكشف الشبكة ↗</a></p><p class="note">عدم العثور عليه لا يثبت أنه مزيف، لكنه يعني أننا لم نؤكد هويته من بيانات السوق.</p></div>';
+   return;
+  }
+  pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
+  const p=pairs[0],isBase=sameAddress(p.baseToken.address,address,chain),token=isBase?p.baseToken:p.quoteToken;
+  const exact=true,expectedOk=!expected||(token.symbol||'').toLowerCase()===expected||(token.name||'').toLowerCase()===expected;
+  let sec=null;
+  if(GP[chain]){const z=await secEvm(chain,[address]);sec=z[address.toLowerCase()]||null}
+  else if(chain==='solana')sec=await secSol(address);
+  const pairLink=p.url||('https://dexscreener.com/'+chain+'/'+p.pairAddress);
+  const status=expectedOk?'العنوان مطابق لرمز العملة في بيانات التداول':'تحذير: الرمز/الاسم لا يطابق القيمة التي أدخلتها';
+  box.innerHTML='<div class="result-card"><div class="big">'+esc(token.name||'اسم غير متوفر')+' ('+esc(token.symbol||'—')+')</div><span class="pill">'+NETWORK_NAMES[chain]+'</span><span class="pill">'+pairs.length+' زوج/مجمع تم العثور عليه</span><div class="riskline '+(expectedOk?'good':'bad')+'">'+status+'</div><p><b>عنوان العقد المؤكد في بيانات الزوج:</b></p><code class="dir">'+esc(token.address)+'</code><p><b>السعر:</b> '+price(p.priceUsd)+'　 <b>السيولة:</b> '+money(p.liquidity?.usd)+'　 <b>حجم 24س:</b> '+money(p.volume?.h24)+'</p><p><b>منصة التداول:</b> '+esc(p.dexId||'—')+'　 <b>المجمع:</b> <code class="dir">'+esc(p.pairAddress||'—')+'</code></p><p><a target="_blank" rel="noopener" href="'+explorerLink(chain,address)+'">عرض العقد على مستكشف الشبكة ↗</a>　<a target="_blank" rel="noopener" href="'+esc(pairLink)+'">عرض السوق على DEX Screener ↗</a></p><hr style="border:0;border-top:1px solid #29415e;margin:15px 0"><b>فحص مخاطر العقد</b>'+showRisk(sec)+'<p class="note">التحقق هنا يؤكد أن العنوان هو نفسه المرتبط بالرمز في زوج تداول تم العثور عليه، ولا يثبت أن المشروع أصلي أو أن الرمز غير منتحل. بيانات الفحص قد تكون ناقصة أو متأخرة، ولا توجد نتيجة آلية تضمن سلامة العقد.</p></div>';
+ }catch(e){box.innerHTML='<div class="riskline bad">تعذر إكمال الفحص: '+esc(e.message)+'. حاول لاحقاً أو افتح العقد مباشرة في مستكشف الشبكة.</div>'}
+ finally{btn.disabled=false;btn.textContent='تحقق من العقد'}
+};
+$('newPoolsBtn').onclick=async()=>{
+ const btn=$('newPoolsBtn'),box=$('newPoolsResults');btn.disabled=true;btn.textContent='جارٍ الجلب…';box.innerHTML='<p class="note">نطلب أحدث المجمعات من GeckoTerminal…</p>';
+ try{
+  const j=await fj('https://api.geckoterminal.com/api/v2/networks/new_pools?include=base_token,quote_token');
+  const included={};(j.included||[]).forEach(x=>included[x.id]=x.attributes||{});
+  const items=(j.data||[]).slice(0,20);
+  if(!items.length){box.innerHTML='<p class="note">لم تصل نتائج حالياً. جرّب لاحقاً.</p>';return}
+  box.innerHTML='<div class="panel-grid">'+items.map(x=>{
+   const a=x.attributes||{},rel=x.relationships||{},base=included[rel.base_token?.data?.id]||{},quote=included[rel.quote_token?.data?.id]||{};
+   const addr=base.address||'',net=(x.relationships?.network?.data?.id||'').replace(/-/g,' ');
+   const liq=Number(a.reserve_in_usd||0),vol=Number(a.volume_usd?.h24||0),created=a.pool_created_at?new Date(a.pool_created_at).toLocaleString('ar-AE'):'غير معروف';
+   const url='https://www.geckoterminal.com/'+encodeURIComponent(net)+'/pools/'+encodeURIComponent(a.address||'');
+   return '<div class="result-card"><div class="big">'+esc(base.symbol||a.name||'مجمع جديد')+'</div><p class="note">'+esc(base.name||'اسم غير متوفر')+' / '+esc(quote.symbol||'—')+'</p><span class="pill">'+esc(net)+'</span><p>السيولة: <b>'+money(liq)+'</b></p><p>حجم 24س: <b>'+money(vol)+'</b></p><p class="note">تاريخ إنشاء المجمع: '+esc(created)+'</p><p class="note">عنوان الرمز: <code class="dir">'+esc(addr||'غير متاح')+'</code></p><a target="_blank" rel="noopener" href="'+url+'">فتح المجمع في GeckoTerminal ↗</a></div>';
+  }).join('')+'</div><p class="note">هذه قائمة مجمعات حديثة وليست توصيات. افحص كل عنوان من أداة فاحص العقد قبل اتخاذ أي قرار.</p>';
+ }catch(e){box.innerHTML='<div class="riskline info">تعذر جلب المجمعات الجديدة حالياً: '+esc(e.message)+'. قد تكون الخدمة محدودة بعدد الطلبات.</div>'}
+ finally{btn.disabled=false;btn.textContent='جلب أحدث المجمعات'}
+};
+
 </script>
 </body>
 </html>
