@@ -17,6 +17,9 @@ const CORS_HEADERS = {
   "Content-Type": "application/json; charset=utf-8"
 };
 
+const sleep = (ms) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
@@ -39,8 +42,10 @@ function preliminaryScore(liquidity, volume, txns, ageHours) {
   const transactionPoints =
     Math.min(20, Math.log10(txns + 1) * 6);
 
-  const agePoints =
-    Math.max(0, 10 - (ageHours / 48) * 10);
+  // لا تمنح نقاط العمر إذا كان تاريخ الإنشاء غير معروف.
+  const agePoints = ageHours === null
+    ? 0
+    : Math.max(0, 10 - (ageHours / 48) * 10);
 
   return Math.round(
     liquidityPoints +
@@ -50,23 +55,63 @@ function preliminaryScore(liquidity, volume, txns, ageHours) {
   );
 }
 
-async function scanNetwork(network, env) {
+function getRetryDelay(response, attempt) {
+  const retryAfter = response.headers.get("Retry-After");
+
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+
+    if (Number.isFinite(seconds)) {
+      return Math.min(seconds * 1000, 30000);
+    }
+
+    const dateDelay = new Date(retryAfter).getTime() - Date.now();
+
+    if (Number.isFinite(dateDelay) && dateDelay > 0) {
+      return Math.min(dateDelay, 30000);
+    }
+  }
+
+  return 2000 * Math.pow(2, attempt);
+}
+
+async function fetchNetworkPools(network) {
   const url =
     `https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?page=1`;
 
-  const response = await fetch(url, {
-    headers: {
-      "Accept": "application/json;version=20230203"
-    }
-  });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const response = await fetch(url, {
+      headers: {
+        "Accept": "application/json;version=20230203"
+      }
+    });
 
-  if (!response.ok) {
+    if (response.ok) {
+      return await response.json();
+    }
+
+    if (response.status === 429 && attempt < 2) {
+      const delay = getRetryDelay(response, attempt);
+
+      console.log(
+        `${network}: rate limited. Retry ${attempt + 1} after ${delay}ms`
+      );
+
+      await sleep(delay);
+      continue;
+    }
+
     throw new Error(
       `${network}: API returned ${response.status}`
     );
   }
 
-  const result = await response.json();
+  throw new Error(`${network}: maximum retries exceeded`);
+}
+
+async function scanNetwork(network, env) {
+  const result = await fetchNetworkPools(network);
+
   const pools = (result.data || []).slice(0, 5);
 
   let saved = 0;
@@ -83,6 +128,7 @@ async function scanNetwork(network, env) {
 
     const liquidity = number(a.reserve_in_usd);
     const volume = number(a.volume_usd?.h24);
+
     const buys = number(a.transactions?.h24?.buys);
     const sells = number(a.transactions?.h24?.sells);
     const txns = buys + sells;
@@ -91,13 +137,15 @@ async function scanNetwork(network, env) {
       ? new Date(a.pool_created_at)
       : null;
 
-    const ageHours = created &&
-      Number.isFinite(created.getTime())
+    const validDate =
+      created && Number.isFinite(created.getTime());
+
+    const ageHours = validDate
       ? Math.max(
           0,
           (Date.now() - created.getTime()) / 3600000
         )
-      : 0;
+      : null;
 
     const score = preliminaryScore(
       liquidity,
@@ -166,21 +214,45 @@ async function runScan(env) {
   }
 
   const started = new Date().toISOString();
+
   let saved = 0;
   let scanned = 0;
+
   const errors = [];
 
-  for (const network of NETWORKS) {
+  for (let i = 0; i < NETWORKS.length; i++) {
+    const network = NETWORKS[i];
+
+    // فاصل زمني بين طلبات الشبكات.
+    if (i > 0) {
+      await sleep(5000);
+    }
+
     try {
-      saved += await scanNetwork(network, env);
+      const networkSaved = await scanNetwork(network, env);
+
+      saved += networkSaved;
       scanned++;
+
+      console.log(
+        `${network}: scan completed, saved ${networkSaved} pools`
+      );
+
     } catch (error) {
       errors.push({
         network,
         message: String(error)
       });
+
+      console.log(`${network}: ${String(error)}`);
     }
   }
+
+  // لا نسجل الفحص الفارغ كنجاح.
+  const scanStatus =
+    errors.length === 0 && saved > 0
+      ? "success"
+      : "partial";
 
   await env.DB.prepare(`
     INSERT INTO scan_runs (
@@ -195,13 +267,14 @@ async function runScan(env) {
   `).bind(
     started,
     new Date().toISOString(),
-    errors.length === 0 ? "success" : "partial",
+    scanStatus,
     scanned,
     saved,
     JSON.stringify(errors)
   ).run();
 
   return {
+    status: scanStatus,
     networks_scanned: scanned,
     pools_saved: saved,
     errors
@@ -223,9 +296,9 @@ export default {
       return json({
         status: "online",
         app: "Crypto Gem Hunter",
-        version: "3.0",
+        version: "3.1",
         database: env.DB ? "connected" : "not_connected",
-        monitoring: "scheduled_setup_pending"
+        monitoring: "cron_configured"
       });
     }
 
@@ -234,26 +307,30 @@ export default {
         error: "D1 binding DB is not connected"
       }, 503);
     }
-if (url.pathname === "/api/scan") {
-  if (request.method !== "POST") {
-    return json({ error: "POST method required" }, 405);
-  }
 
-  try {
-    const result = await runScan(env);
+    if (url.pathname === "/api/scan") {
+      if (request.method !== "POST") {
+        return json({
+          error: "POST method required"
+        }, 405);
+      }
 
-    return json({
-      status: "completed",
-      message: "Scan finished",
-      ...result
-    });
-  } catch (error) {
-    return json({
-      status: "error",
-      message: String(error)
-    }, 500);
-  }
-}
+      try {
+        const result = await runScan(env);
+
+        return json({
+          message: "Scan finished",
+          ...result
+        });
+
+      } catch (error) {
+        return json({
+          status: "error",
+          message: String(error)
+        }, 500);
+      }
+    }
+
     if (url.pathname === "/api/status") {
       const latest = await env.DB.prepare(`
         SELECT * FROM scan_runs
@@ -267,8 +344,14 @@ if (url.pathname === "/api/scan") {
     }
 
     if (url.pathname === "/api/candidates") {
-      const requested = Number(url.searchParams.get("limit") || 50);
-      const limit = Math.max(1, Math.min(100, requested));
+      const requested = Number(
+        url.searchParams.get("limit") || 50
+      );
+
+      const limit = Math.max(
+        1,
+        Math.min(100, requested)
+      );
 
       const result = await env.DB.prepare(`
         SELECT *
@@ -297,17 +380,19 @@ if (url.pathname === "/api/scan") {
       endpoints: [
         "/health",
         "/api/status",
-        "/api/candidates"
+        "/api/candidates",
+        "/api/scan"
       ]
     });
   },
 
   async scheduled(controller, env) {
-    // UAE midnight to 3 AM = UTC 20:00 to 22:59.
-    // During this period the 5-minute schedule takes priority.
-    const scheduledDate = new Date(controller.scheduledTime);
+    const scheduledDate =
+      new Date(controller.scheduledTime);
+
     const utcHour = scheduledDate.getUTCHours();
 
+    // تجاهل Cron العادي خلال فترة الفحص المكثف.
     if (
       controller.cron === NORMAL_CRON &&
       utcHour >= 20 &&
@@ -317,6 +402,7 @@ if (url.pathname === "/api/scan") {
     }
 
     const result = await runScan(env);
+
     console.log("Crypto Gem Hunter scan:", result);
   }
 };
