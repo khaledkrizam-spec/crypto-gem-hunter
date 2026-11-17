@@ -91,17 +91,17 @@ h2{font-size:19px;color:#f1f6ff}
 <div class="stats">
  <div><b id="s1">—</b><span>رموز جرى فحصها</span></div>
  <div><b id="s2">—</b><span>اجتازت الفلاتر</span></div>
- <div><b id="s3">—</b><span>مرشحة قوية</span></div>
+ <div><b id="s3">—</b><span>تحتاج مراجعة نهائية</span></div>
  <div><b id="s4">—</b><span>آخر تحديث</span></div>
 </div>
 
 <div class="box">
  <h2>النتائج مرتبة بالتقييم</h2>
  <div class="tw"><table>
-  <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية</th><th>السيولة</th><th>حجم 24س</th><th>التقييم</th><th>القرار</th></tr></thead>
+  <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية / FDV</th><th>السيولة</th><th>حجم 24س</th><th>التقييم</th><th>القرار</th></tr></thead>
   <tbody id="rows"><tr><td colspan="8" class="note">لا توجد نتائج بعد.</td></tr></tbody>
  </table></div>
- <p class="note">اضغط على أي صف لرؤية أسباب القرار. التقييم أداة فرز وليس توصية شراء.</p>
+ <p class="note">تعرض هذه القائمة حتى 5 رموز اجتازت فلاتر السوق وفحص الأمان المتاح. لا تعني اجتياز الشريعة أو التحقق من الارتباطات المؤسسية؛ يلزم تدقيق بشري موثق قبل أي قرار.</p>
 </div>
 
 <div class="box">
@@ -218,7 +218,7 @@ async function secSol(a){
 // التقييم
 function score(p,sec,c){
  const liq=p.liquidity?.usd||0,vol=p.volume?.h24||0,mc=p.marketCap||p.fdv||0,tx=p.txns?.h24||{buys:0,sells:0},n=tx.buys+tx.sells;
- const age=(Date.now()-p.pairCreatedAt)/864e5,ch=p.priceChange?.h24??0,vl=vol/liq,lm=liq/mc,br=n?tx.buys/n:0.5;
+ const age=Number.isFinite(p.pairCreatedAt)?(Date.now()-p.pairCreatedAt)/864e5:NaN,ch=p.priceChange?.h24??0,vl=liq>0?vol/liq:Infinity,lm=mc>0?liq/mc:0,br=n?tx.buys/n:0.5;
  const pro=[],con=[],hard=[];let s=0;
  const a=Math.min(15,15*Math.log10(liq/c.minLiq+1)/Math.log10(5));s+=a;
  (liq>=100000?pro:con).push(`سيولة ${money(liq)}`);
@@ -245,8 +245,8 @@ function score(p,sec,c){
  s=Math.round(Math.min(100,s));
  let d,cls;
  if(hard.length||s<45){d='تجنب';cls='ba'}
- else if(s>=c.thr&&verified){d='مرشح قوي';cls='ok'}
- else{d='مراقبة';cls='wa'}
+ else if(s>=c.thr&&verified){d='تحتاج مراجعة نهائية';cls='wa'}
+ else{d='غير مؤهلة حالياً';cls='wa'}
  return{s,d,cls,pro,con,hard,verified,age};
 }
 
@@ -277,8 +277,14 @@ async function run(){
    if(vol<c.minVol)return no(`حجم ${money(vol)} أقل من الحد`);
    if(!mc)return no('القيمة السوقية غير متاحة');
    if(mc<c.minMc||mc>c.maxMc)return no(`قيمة سوقية ${money(mc)} خارج النطاق`);
+   if(!Number.isFinite(age)||age<0)return no('تاريخ إنشاء الزوج غير متاح أو غير صالح');
    if(age>c.maxAge)return no(`عمر ${age.toFixed(0)} يوم أكبر من الحد`);
    if(age*24<c.minAge)return no('الزوج أحدث من الحد الأدنى للعمر');
+   const tx=p.txns?.h24||{buys:0,sells:0};
+   const totalTx=(+tx.buys||0)+(+tx.sells||0);
+   if(totalTx<100)return no(`عدد الصفقات ${totalTx} أقل من 100 خلال 24 ساعة`);
+   if(liq<=0||vol<=0)return no('السيولة أو حجم التداول يساوي صفراً');
+   if(vol/liq>40)return no(`حجم التداول ${Math.round(vol/liq)} ضعف السيولة؛ يستبعد للاشتباه`);
    cand.push(p);
   });
   $('st').textContent=`فحص أمان ${cand.length} رمز…`;
@@ -287,24 +293,25 @@ async function run(){
   for(const ch in evm)Object.assign(sec,await secEvm(ch,evm[ch]));
   await Promise.all(cand.filter(p=>p.chainId==='solana').map(async p=>{const r=await secSol(p.baseToken.address);if(r)sec[p.baseToken.address.toLowerCase()]=r}));
   results=cand.map(p=>({p,r:score(p,sec[p.baseToken.address.toLowerCase()],c)}));
+  results.forEach(({p,r})=>{if(!r.verified)log.push([p.baseToken.symbol,p.chainId,'لم يصل تقرير أمان صالح؛ استبعاد من قائمة المراجعة النهائية'])});
   results.forEach(({p,r})=>{if(c.sec&&r.hard.length)log.push([p.baseToken.symbol,p.chainId,'مخاطر حرجة: '+r.hard.join('، ')])});
   results.sort((a,b)=>b.r.s-a.r.s);
   render(results,log,sel.length);
-  $('st').textContent='اكتمل الفحص. المصادر: DEX Screener وGoPlus وRugCheck.';
+  $('st').textContent='اكتمل الفرز. المعروض بحد أقصى 5 رموز اجتازت فلاتر السوق وفحص الأمان المتاح؛ الشريعة والارتباطات المؤسسية ما زالت تتطلب مراجعة بشرية.';
  }catch(e){$('st').textContent='تعذر الجلب: '+e.message+'. تحقق من الاتصال وأعد المحاولة.'}
  $('go').disabled=false;
 }
 function render(res,log,tot){
- const shown=res.filter(x=>!(cfg().sec&&x.r.hard.length));
- $('s1').textContent=tot;$('s2').textContent=res.length;$('s3').textContent=res.filter(x=>x.r.d==='مرشح قوي').length;
+ const shown=res.filter(x=>x.r.d==='تحتاج مراجعة نهائية'&&x.r.verified&&!(cfg().sec&&x.r.hard.length)).slice(0,5);
+ $('s1').textContent=tot;$('s2').textContent=res.length;$('s3').textContent=shown.length;
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});
- $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span>${r.s}</td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join(''):'<tr><td colspan="8" class="note">لم يجتز أي رمز الفلاتر. خفّف الحدود في الإعدادات.</td></tr>';
+ $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span>${r.s}</td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join('') :'<tr><td colspan="8" class="note">لا توجد حالياً رموز اجتازت شروط السوق وفحص الأمان. هذا أفضل من عرض فرص غير مكتملة.</td></tr>';
  document.querySelectorAll('tr.r').forEach(tr=>{const f=()=>{const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dt')){nx.remove();return}const {p,r}=shown[tr.dataset.i];const li=(a,c)=>a.map(x=>`<li class="${c}">${esc(x)}</li>`).join('');tr.insertAdjacentHTML('afterend',`<tr class="dt"><td colspan="8"><ul>${li(r.hard,'m')}${li(r.pro,'p')}${li(r.con,'i')}</ul><a href="${esc(p.url)}" target="_blank" rel="noopener">فتح الرسم على DEX Screener</a> · <span class="dir">${esc(p.baseToken.address)}</span></td></tr>`)};tr.onclick=f;tr.onkeydown=e=>{if(e.key==='Enter')f()}});
  $('log').innerHTML=log.length?log.map(l=>`<tr><td>${esc(l[0])}</td><td>${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
 }
 $('go').onclick=run;
 $('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='التحديث التلقائي: متوقف'}else{timer=setInterval(run,9e5);$('auto').textContent='التحديث التلقائي: كل 15 دقيقة';run()}};
-$('csv').onclick=()=>{if(!results.length)return;const h='symbol,chain,price,mcap,liquidity,vol24h,score,decision,address\n';const b=results.map(({p,r})=>[p.baseToken.symbol,p.chainId,p.priceUsd,p.marketCap||p.fdv,p.liquidity?.usd,p.volume?.h24,r.s,r.d,p.baseToken.address].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+b],{type:'text/csv'}));a.download='gem-hunter.csv';a.click()};
+$('csv').onclick=()=>{if(!results.length)return;const h='symbol,chain,price,mcap,liquidity,vol24h,score,decision,address\n';const b=results.filter(({r})=>r.d==='تحتاج مراجعة نهائية'&&r.verified).slice(0,5).map(({p,r})=>[p.baseToken.symbol,p.chainId,p.priceUsd,p.marketCap||p.fdv,p.liquidity?.usd,p.volume?.h24,r.s,r.d,p.baseToken.address].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+b],{type:'text/csv'}));a.download='gem-hunter.csv';a.click()};
 
 const EXPLORERS={solana:'https://solscan.io/token/',ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'};
 const NETWORK_NAMES={solana:'Solana',ethereum:'Ethereum',bsc:'BNB Chain',base:'Base',arbitrum:'Arbitrum',polygon:'Polygon',avalanche:'Avalanche',optimism:'Optimism'};
