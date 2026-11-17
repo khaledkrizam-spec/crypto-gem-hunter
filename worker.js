@@ -458,9 +458,6 @@ if (url.pathname === "/api/candidates") {
   });
 }
 
-      });
-    }
-
     return json({
       app: "Crypto Gem Hunter Engine",
       status: "running",
