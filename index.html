@@ -84,39 +84,53 @@ h2{font-size:19px;color:#f1f6ff}
 .riskline{padding:8px 10px;border-radius:8px;margin:6px 0;background:#14283e}
 .riskline.bad{background:#3d2029;color:#ffb7bd}.riskline.good{background:#12372f;color:#a8f0d0}.riskline.info{background:#3b301c;color:#f7d999}
 
+/* Premium live scanner dashboard */
+:root{--bg:#07101d;--card:#0e1b2c;--ink:#edf4ff;--mute:#91a5bf;--line:#243952;--acc:#65b5ff;--ok:#44d7a0;--warn:#ffc568;--bad:#ff7885}
+body{background:radial-gradient(ellipse at 80% -10%,#193b62 0,transparent 36%),radial-gradient(ellipse at 0 35%,#102b43 0,transparent 32%),#07101d;color:var(--ink)}
+.w{max-width:1450px;padding:25px 24px 80px}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:24px;padding:27px 30px;border:1px solid #2c4c70;border-radius:23px;background:linear-gradient(120deg,#132f4e,#0b192b);box-shadow:0 24px 65px #0005;margin-bottom:15px}
+.hero-brand{display:flex;align-items:center;gap:17px}.brand-mark{width:60px;height:60px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,#68bdff,#2468bb);color:#fff;font-size:21px;font-weight:800}
+.hero h1{font-size:clamp(22px,3vw,34px);letter-spacing:1.3px;direction:ltr;text-align:right;margin:2px 0;color:#fff}.hero .header-copy{font-size:14px;margin:3px 0 0}
+.hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.live-state{font-size:12px;color:#b5cbe3;white-space:nowrap}.live-state i,.status-led{display:inline-block;width:8px;height:8px;border-radius:50%;background:#43d69b;box-shadow:0 0 13px #43d69b;margin-inline-end:7px}
+.scan-button{font-size:15px;padding:14px 23px;border-radius:12px;background:linear-gradient(120deg,#2476c9,#54b2ff);box-shadow:0 9px 27px #258be344;white-space:nowrap}
+.scan-status{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#0d1d30;border:1px solid #203a57;border-radius:12px;margin-bottom:14px}.scan-status p{margin:0;color:#b4c7dd;font-size:13px}
+.decision-note{background:#172a3c;border-color:#5a492d;color:#f5d9a8;border-radius:12px}
+.compact-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:0 0 14px}.compact-stats div{padding:13px 16px;border-radius:14px}.compact-stats b{font-size:24px}
+.results-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:25px 2px 12px}.results-head h2{font-size:22px;margin:2px 0}.result-legend{display:flex;gap:13px;flex-wrap:wrap;color:#a9bdd2;font-size:11px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-inline-end:5px}.dot.green{background:#44d7a0}.dot.amber{background:#ffc568}.dot.red{background:#ff7885}
+.candidate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-bottom:18px}
+.candidate-card{min-width:0;border:1px solid #294360;border-radius:18px;background:linear-gradient(150deg,#11243a,#0b192a 72%);padding:19px;box-shadow:0 15px 38px #0003;position:relative;overflow:hidden}.candidate-card:before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,#287bd0,#55c6ff)}
+.candidate-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.token-id{display:flex;gap:12px;align-items:center;min-width:0}.token-avatar{width:43px;height:43px;flex:0 0 43px;border-radius:13px;background:#1a3a59;display:grid;place-items:center;color:#a9d8ff;font-weight:800}.token-title{min-width:0}.token-title h3{font-size:19px;margin:0;color:#fff;overflow-wrap:anywhere}.token-title p{margin:2px 0;color:#8fa9c5;font-size:12px}.score-block{text-align:left;direction:ltr;flex:0 0 auto}.score-number{font-size:26px;font-weight:800;color:#e9f5ff;line-height:1.1}.score-caption{font-size:10px;color:#91a9c3}
+.token-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:17px 0 13px}.metric{background:#0a1727;border:1px solid #1e344d;border-radius:11px;padding:9px 10px;min-width:0}.metric span{display:block;font-size:10px;color:#8ea5bf}.metric b{display:block;font-size:13px;color:#edf5ff;direction:ltr;text-align:right;overflow-wrap:anywhere}.positive{color:#58dda8!important}.negative{color:#ff8993!important}
+.card-section{border-top:1px solid #223850;padding-top:12px;margin-top:12px}.card-section h4{font-size:12px;color:#b7cce3;margin:0 0 8px}.signal-list{display:flex;flex-wrap:wrap;gap:6px}.signal{font-size:11px;border-radius:8px;padding:5px 8px;background:#12372f;color:#a5f0d0}.signal.risk{background:#41242d;color:#ffb6bf}.signal.warn{background:#3c321f;color:#f5d79a}
+.recommendation{border:1px solid #345575;background:#10263c;border-radius:12px;padding:12px 13px;margin-top:13px}.recommendation strong{display:block;color:#b8dcff;font-size:12px;margin-bottom:4px}.recommendation p{margin:0;color:#d1dfed;font-size:12px;line-height:1.7}
+.card-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:13px;flex-wrap:wrap}.token-links{display:flex;gap:12px;flex-wrap:wrap;font-size:12px}.token-links a{color:#83c4ff;text-decoration:none}
+.verification-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}.verification-item{font-size:10px;color:#e6c98e;background:#302a20;border:1px solid #51432c;border-radius:8px;padding:7px}
+.empty-state{grid-column:1/-1;text-align:center;padding:45px 20px;border:1px dashed #35516f;border-radius:17px;background:#0c1b2c}.empty-icon{font-size:35px;color:#65b5ff}.empty-state h3{margin:6px 0;color:#eaf4ff}.empty-state p{margin:0;color:#91a8c1;font-size:13px}
+.chart-section{margin-top:15px}.dashboard{margin:14px 0 0}.chart-card{background:#0a1727;border-color:#243d58;border-radius:14px}.chart-card h3{font-size:14px;margin:0;color:#eaf3ff}
+.advanced{border:1px solid #243b55;border-radius:14px;background:#0c1929;margin:13px 0;overflow:hidden}.advanced summary{padding:14px 17px;cursor:pointer;color:#b8d4ef;font-size:13px;font-weight:700}.advanced .box{margin:0;border:0;box-shadow:none}.advanced[open] summary{border-bottom:1px solid #243b55}
+@media(max-width:900px){.candidate-grid{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.hero-actions{width:100%;justify-content:space-between}}
+@media(max-width:620px){.w{padding:12px 10px 45px}.hero{padding:18px;border-radius:16px}.brand-mark{width:48px;height:48px}.hero h1{font-size:21px}.hero-actions{align-items:stretch;flex-direction:column}.scan-button{width:100%}.compact-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.token-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.verification-list{grid-template-columns:1fr}.candidate-card{padding:14px}}
 </style>
 </head>
 <body>
 <div class="w">
-<header>
- <div><div class="section-kicker">ON-DEMAND MARKET INTELLIGENCE</div><h1>Crypto Gem Hunter<small>لوحة اكتشاف وتحليل العملات</small></h1><p class="header-copy">فحص يدوي عند الطلب · بيانات السوق ومؤشرات المخاطر · دون سجل نتائج</p></div>
- <div class="bar">
-  <button id="go">افحص الآن</button>
- </div>
-</header>
-<p id="st">جاهز. اضغط «افحص الآن» لجلب بيانات جديدة.</p>
-<div class="stats">
- <div><b id="s1">—</b><span>رموز جرى فحصها</span></div>
- <div><b id="s2">—</b><span>اجتازت فلاتر السوق</span></div>
- <div><b id="s3">—</b><span>تحتاج مراجعة نهائية</span></div>
- <div><b id="s4">—</b><span>آخر تحديث</span></div>
-</div>
+<header class="hero"><div class="hero-brand"><div class="brand-mark">CG</div><div><div class="section-kicker">ON-DEMAND DIGITAL ASSET INTELLIGENCE</div><h1>CRYPTO GEM HUNTER</h1><p class="header-copy">رادار اكتشاف الفرص المبكرة وتحليل المخاطر</p></div></div><div class="hero-actions"><span class="live-state"><i></i> فحص مباشر عند الطلب</span><button id="go" class="scan-button">⌕ ابدأ الفحص المباشر</button></div></header>
+<div class="scan-status"><span class="status-led"></span><p id="st">الرادار جاهز. ابدأ الفحص لجلب أحدث البيانات.</p></div>
+<div class="stats compact-stats"><div><b id="s1">—</b><span>رموز من المصدر</span></div><div><b id="s2">—</b><span>اجتازت فلاتر السوق</span></div><div><b id="s3">—</b><span>مرشحو المراجعة</span></div><div><b id="s4">—</b><span>وقت آخر فحص</span></div></div>
+<div class="decision-note"><b>تنبيه:</b> لا توجد طريقة موثوقة لمعرفة العملة التي ستنفجر مسبقاً. نرتب المرشحين وفق بيانات قابلة للقياس ونوضح المخاطر والنواقص. لا تدخل لمجرد ارتفاع السعر أو الدرجة.</div>
 
 <div class="decision-note"><span>ⓘ</span><span><b>مهم قبل اتخاذ القرار:</b> التقييم المعروض مؤشر فرز أولي مبني على بيانات السوق، وليس احتمال ربح أو حكماً نهائياً على جودة المشروع. تقرير الأمان غير المتاح لا يعني أن العقد آمن، والتوافق الشرعي والارتباطات المؤسسية يحتاجان تحققاً مستقلاً.</span></div>
 <div class="dashboard">
  <section class="chart-card"><div class="section-kicker">MARKET RANKING</div><h2>مقارنة التقييم الأولي</h2><p class="note">درجة فرز السوق من 100 — لا تمثل توصية شراء</p><div class="chart-wrap"><canvas id="scoreChart" aria-label="مقارنة التقييم الأولي للعملات" role="img"></canvas></div></section>
  <section class="chart-card"><div class="section-kicker">24H PRICE CHANGE</div><h2>تغير السعر خلال 24 ساعة</h2><p class="note">النسبة المئوية المسجلة في بيانات السوق وقت الفحص</p><div class="chart-wrap"><canvas id="changeChart" aria-label="تغير السعر خلال 24 ساعة" role="img"></canvas></div></section>
 </div>
-<div class="box">
- <h2>النتائج مرتبة بالتقييم الأولي</h2>
- <div class="tw"><table>
-  <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية / FDV</th><th>السيولة</th><th>حجم 24س</th><th>تقييم السوق الأولي</th><th>حالة الفرز</th></tr></thead>
-  <tbody id="rows"><tr><td colspan="8" class="note">لا توجد نتائج بعد.</td></tr></tbody>
- </table></div>
- <p class="note">تعرض هذه القائمة حتى 5 رموز اجتازت فلاتر السوق وتقرير مخاطر العقد المتاح. لم يتم إثبات توزيع كبار الحائزين أو التوافق الشرعي أو الارتباطات المؤسسية؛ هذه نقاط مراجعة بشرية موثقة وليست نتائج آلية.</p>
-</div>
+<section class="results-head"><div><div class="section-kicker">LIVE OPPORTUNITY RADAR</div><h2>أفضل 5 مرشحين من نتائج هذا الفحص</h2><p class="note">ترتيب بحسب مؤشرات قابلة للقياس، وليس توقعاً مؤكداً للانفجار السعري.</p></div><div class="result-legend"><span><i class="dot green"></i> إيجابي</span><span><i class="dot amber"></i> يحتاج تحققاً</span><span><i class="dot red"></i> خطر</span></div></section>
+<div class="candidate-grid" id="candidateGrid"><div class="empty-state"><div class="empty-icon">⌁</div><h3>الرادار جاهز</h3><p>اضغط ابدأ الفحص المباشر لجلب البيانات وترتيب المرشحين.</p></div></div>
+<div class="box chart-section"><div class="section-kicker">MARKET SNAPSHOT</div><h2>مقارنة المرشحين</h2><div class="dashboard"><section class="chart-card"><h3>مؤشر السوق من 100</h3><p class="note">ليس احتمال ربح.</p><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></section><section class="chart-card"><h3>تغير السعر خلال 24 ساعة</h3><p class="note">قراءة وقت الفحص.</p><div class="chart-wrap"><canvas id="changeChart"></canvas></div></section></div></div>
+<div class="box"><h3>سجل الاستبعاد لهذا الفحص</h3><div class="tw"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>سبب الاستبعاد</th></tr></thead><tbody id="log"><tr><td colspan="3" class="note">سيظهر سبب الاستبعاد هنا.</td></tr></tbody></table></div></div>
+<div class="box methodology"><h3>حدود الفحص</h3><p class="note">لا يستطيع الفحص وحده إثبات توزيع كبار الحائزين أو التوافق الشرعي أو غياب الارتباطات المؤسسية. ستظهر هذه العناصر كغير متحققة ولن تُحسب نقاطاً إيجابية. كما لا يحدد سعراً مستهدفاً دون بيانات شموع ودعم ومقاومة موثوقة.</p></div>
 
-<div class="box">
+<details class="advanced"><summary>إعدادات الفحص المتقدمة</summary><div class="box">
  <h2>الإعدادات</h2>
  <div class="grid">
   <label>أقل سيولة ($)<input id="minLiq" type="number" value="25000"></label>
@@ -134,9 +148,8 @@ h2{font-size:19px;color:#f1f6ff}
  <label class="cb"><input type="checkbox" id="fSec" checked> استبعاد الرمز عند فشل أي فحص أمان حرج</label>
  <label class="cb"><input type="checkbox" id="fDefi" checked> استبعاد مشاريع DeFi وأموال الاستقرار بالكلمات المفتاحية</label>
  <p><button class="g" id="save">حفظ الإعدادات</button></p>
-</div>
-
-
+</div></details>
+<details class="advanced"><summary>أدوات إضافية: فاحص العقد ورادار المجمعات</summary>
 <div class="box" id="contractBox">
  <h2>فاحص العقد الذكي — تحقق قبل أن تثق</h2>
  <p class="note">الصق عنوان العقد واختر الشبكة. سنبحث عن تطابق العنوان حرفياً في بيانات التداول، ثم نعرض بيانات الرمز ومؤشرات الأمان المتاحة.</p>
@@ -162,16 +175,8 @@ h2{font-size:19px;color:#f1f6ff}
  <div id="newPoolsResults"><p class="note">اضغط «جلب أحدث المجمعات» لعرض فرص حديثة.</p></div>
 </div>
 
-<div class="box">
- <h2>أسباب الاستبعاد في هذا البحث</h2>
- <div class="tw"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>السبب</th></tr></thead><tbody id="log"><tr><td colspan="3" class="note">يظهر هنا سبب استبعاد كل رمز.</td></tr></tbody></table></div>
-</div>
 
-<div class="box note">
- <b>كيف يتخذ النظام قراره:</b> يجمع بيانات السوق من DEX Screener، ثم يفحص أمان العقد عبر GoPlus (شبكات EVM) وRugCheck (سولانا). التقييم من 100: السيولة 15، نشاط التداول 15، نسبة السيولة للقيمة السوقية 10، توازن الشراء والبيع 10، عدد الصفقات 10، العمر 5، الزخم السعري 10، الحضور العلني 5، الأمان 20.
- أي مؤشر خطر حرج (honeypot، ضريبة بيع عالية، عقد قابل للتعديل، تداول وهمي) يعطي القرار «تجنب» بغض النظر عن التقييم.
- لا يستطيع النظام إثبات توزيع الحائزين الحقيقي ولا الارتباطات المؤسسية ولا التوافق الشرعي؛ هذه تحتاج مراجعة بشرية موثقة. الأداة لا تشتري ولا تتصل بمحفظة. كل قرار استثمار مسؤوليتك.
-</div>
+</details>
 </div>
 
 <script>
@@ -232,8 +237,8 @@ async function secSol(a){
 
 // التقييم
 function score(p,sec,c){
- const liq=p.liquidity?.usd||0,vol=p.volume?.h24||0,mc=p.marketCap||p.fdv||0,tx=p.txns?.h24||{buys:0,sells:0},n=tx.buys+tx.sells;
- const age=Number.isFinite(p.pairCreatedAt)?(Date.now()-p.pairCreatedAt)/864e5:NaN,ch=p.priceChange?.h24??0,vl=liq>0?vol/liq:Infinity,lm=mc>0?liq/mc:0,br=n?tx.buys/n:0.5;
+ const liq=p.liquidity?.usd||0,vol=p.volume?.h24||0,mc=p.marketCap||p.fdv||0,tx=p.txns?.h24||{buys:0,sells:0},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells;
+ const age=Number.isFinite(p.pairCreatedAt)?(Date.now()-p.pairCreatedAt)/864e5:NaN,ch=p.priceChange?.h24??0,vl=liq>0?vol/liq:Infinity,lm=mc>0?liq/mc:0,br=n?buys/n:0.5;
  const pro=[],con=[],hard=[];let s=0;
  const a=Math.min(15,15*Math.log10(liq/c.minLiq+1)/Math.log10(5));s+=a;
  (liq>=100000?pro:con).push(`سيولة ${money(liq)}`);
@@ -249,19 +254,20 @@ function score(p,sec,c){
  else if(br<0.4)con.push(`ضغط بيع ${((1-br)*100).toFixed(0)}%`);
  if(n>=1000){s+=10;pro.push(`${n} صفقة`)}else if(n>=300){s+=6;pro.push(`${n} صفقة`)}else con.push(`صفقات قليلة (${n})`);
  if(age>=1&&age<=14){s+=5;pro.push(`عمر ${age.toFixed(1)} يوم`)}else if(age<1)con.push('عمر أقل من يوم');
- if(ch>=-20&&ch<=150){s+=10;pro.push(`حركة 24س ${ch.toFixed(0)}%`)}
- else if(ch>400){con.push(`قفزة ${ch.toFixed(0)}% خلال 24س: خطر ذروة`);s+=2}
- else if(ch<-50){con.push(`هبوط ${ch.toFixed(0)}%`)}else s+=5;
+ if(ch>=-5&&ch<=25){s+=10;pro.push(`زخم 24س متزن ${ch.toFixed(1)}%`)}
+ else if(ch>25&&ch<=60){s+=5;con.push(`ارتفاع سريع ${ch.toFixed(1)}%؛ لا تطارد السعر`)}
+ else if(ch>60){s+=1;con.push(`اندفاع سعري ${ch.toFixed(1)}%؛ خطر شراء القمة`)}
+ else if(ch<-20){con.push(`هبوط ${ch.toFixed(1)}%؛ ضغط سلبي`)}else{s+=5;con.push(`تغير 24س ${ch.toFixed(1)}%`)}
  const w=p.info?.websites?.length,t=(p.info?.socials||[]).some(x=>x.type==='twitter');
  if(w&&t){s+=5;pro.push('موقع وحساب X معلنان')}else if(w||t){s+=2;con.push('حضور علني جزئي')}else con.push('لا موقع ولا حساب X');
  let verified=false;
- if(sec){verified=true;sec.bad.forEach(x=>hard.push(x));sec.good.forEach(x=>pro.push(x));sec.info.forEach(x=>con.push(x));if(!sec.bad.length)s+=20}
- else{s+=6;con.push('لم يتم التحقق من أمان العقد')}
+ if(sec){verified=true;(sec.bad||[]).forEach(x=>hard.push(x));(sec.good||[]).forEach(x=>pro.push(x));(sec.info||[]).forEach(x=>con.push(x));if(!(sec.bad||[]).length)s+=20}
+ else{con.push('فحص أمان العقد غير متاح؛ لا تُمنح نقاط أمان')}
  s=Math.round(Math.min(100,s));
  let d,cls;
  if(hard.length||s<45){d='تجنب';cls='ba'}
- else if(s>=c.thr&&verified){d='تحتاج مراجعة نهائية';cls='wa'}
- else{d='غير مؤهلة حالياً';cls='wa'}
+ else if(s>=c.thr&&verified){d='مرشح للمراقبة';cls='ok'}
+ else{d='مراقبة حذرة';cls='wa'}
  return{s,d,cls,pro,con,hard,verified,age};
 }
 
@@ -309,7 +315,7 @@ async function run(){
   await Promise.all(cand.filter(p=>p.chainId==='solana').map(async p=>{const r=await secSol(p.baseToken.address);if(r)sec[p.baseToken.address.toLowerCase()]=r}));
   results=cand.map(p=>({p,r:score(p,sec[p.baseToken.address.toLowerCase()],c)}));
   results.forEach(({p,r})=>{if(!r.verified)log.push([p.baseToken.symbol,p.chainId,'لم يصل تقرير أمان صالح؛ استبعاد من قائمة المراجعة النهائية'])});
-  results.forEach(({p,r})=>{if(c.sec&&r.hard.length)log.push([p.baseToken.symbol,p.chainId,'مخاطر حرجة: '+r.hard.join('، ')])});
+  results.forEach(({p,r})=>{if(r.hard.length)log.push([p.baseToken.symbol,p.chainId,'مخاطر حرجة: '+r.hard.join('، ')])});
   results.sort((a,b)=>b.r.s-a.r.s);
   render(results,log,sel.length);
   $('st').textContent='اكتمل الفرز. المعروض بحد أقصى 5 رموز اجتازت فلاتر السوق وفحص الأمان المتاح؛ الشريعة والارتباطات المؤسسية ما زالت تتطلب مراجعة بشرية.';
@@ -332,14 +338,35 @@ function drawCharts(items){
  scoreChartInstance=new Chart(a,{type:'bar',data:{labels,datasets:[{data:scores,backgroundColor:'#4da3ff',borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:'#a9bdd5'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}}}});
  changeChartInstance=new Chart(b,{type:'bar',data:{labels,datasets:[{data:changes,backgroundColor:changes.map(v=>v>=0?'#42d392':'#ff6b75'),borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{ticks:{color:'#a9bdd5',callback:v=>v+'%'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}},plugins:{...base.plugins,tooltip:{...base.plugins.tooltip,callbacks:{label:c=>c.raw.toFixed(2)+'%'}}}}});
 }
+function candidateAdvice(p,r){
+ const liq=Number(p.liquidity?.usd||0),vol=Number(p.volume?.h24||0),ch=Number(p.priceChange?.h24||0),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,buyRatio=n?buys/n:0,advice=[];
+ if(ch>35)advice.push('لا تطارد الارتفاع الحالي. انتظر هدوء الحركة وإعادة اختبار منطقة سعرية ثابتة؛ لا تتوفر بيانات شموع كافية لتحديد دعم رقمي.');
+ else if(ch<-15)advice.push('لا تلتقط الهبوط تلقائياً. انتظر توقف القمم والقيعان الهابطة وعودة حجم شراء مستقر.');
+ else advice.push('ضعها في قائمة المراقبة فقط، وانتظر تأكيد استمرار السيولة والنشاط قبل التفكير في الدخول.');
+ if(liq<75000)advice.push('السيولة محدودة نسبياً؛ الانزلاق السعري قد يكون كبيراً.');
+ if(n&&buyRatio>0.72)advice.push('هيمنة الشراء مرتفعة؛ راقب احتمال اندفاع قصير أو تداول غير متوازن.');
+ if(vol/Math.max(liq,1)>8)advice.push('حجم التداول مرتفع جداً نسبةً للسيولة؛ تحقق من جودة التداول وتكرار المحافظ.');
+ return{pros:r.pro,risks:[...r.hard,...r.con],advice};
+}
 function render(res,log,tot){
- const shown=res.filter(x=>x.r.d==='تحتاج مراجعة نهائية'&&x.r.verified&&!(cfg().sec&&x.r.hard.length)).slice(0,5);
- $('s1').textContent=tot;$('s2').textContent=res.length;$('s3').textContent=shown.length;
- $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});
- drawCharts(shown);
- $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span><b>${r.s}/100</b></td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join('') :'<tr><td colspan="8" class="note">لا توجد حالياً رموز اجتازت شروط السوق وفحص الأمان. هذا أفضل من عرض فرص غير مكتملة.</td></tr>';
- document.querySelectorAll('tr.r').forEach(tr=>{const f=()=>{const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dt')){nx.remove();return}const {p,r}=shown[tr.dataset.i];const li=(a,c)=>a.map(x=>`<li class="${c}">${esc(x)}</li>`).join('');tr.insertAdjacentHTML('afterend',`<tr class="dt"><td colspan="8"><ul>${li(r.hard,'m')}${li(r.pro,'p')}${li(r.con,'i')}</ul><a href="${esc(p.url)}" target="_blank" rel="noopener">فتح الرسم على DEX Screener</a> · <span class="dir">${esc(p.baseToken.address)}</span></td></tr>`)};tr.onclick=f;tr.onkeydown=e=>{if(e.key==='Enter')f()}});
- $('log').innerHTML=log.length?log.map(l=>`<tr><td>${esc(l[0])}</td><td>${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
+ const c=cfg(),eligible=res.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).sort((a,b)=>b.r.s-a.r.s),shown=eligible.slice(0,5);
+ $('s1').textContent=tot;$('s2').textContent=res.filter(x=>x.r.verified&&!x.r.hard.length).length;$('s3').textContent=shown.length;
+ $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);
+ const cards=shown.map(({p,r},i)=>{
+  const a=candidateAdvice(p,r),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,ch=Number(p.priceChange?.h24||0),age=Number.isFinite(r.age)?r.age.toFixed(1)+' يوم':'غير متاح',cap=p.marketCap?money(p.marketCap):money(p.fdv)+' FDV';
+  const badge=r.s>=c.thr?'مراقبة ذات أولوية':'مراقبة حذرة',li=(arr,cls)=>arr.length?arr.map(x=>'<span class="signal '+cls+'">'+esc(x)+'</span>').join(''):'<span class="signal warn">لا توجد بيانات كافية لإثبات ذلك</span>',risks=a.risks.length?li(a.risks,'risk'):'<span class="signal">لم يرصد الفاحص خطراً حرجاً ضمن البيانات المتاحة</span>';
+  const addr=esc(p.baseToken.address||''),explorer=p.chainId==='solana'?'https://solscan.io/token/'+encodeURIComponent(addr):({ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'}[p.chainId]||'')+encodeURIComponent(addr);
+  return '<article class="candidate-card"><div class="candidate-top"><div class="token-id"><div class="token-avatar">'+esc((p.baseToken.symbol||'?').slice(0,3).toUpperCase())+'</div><div class="token-title"><h3>'+esc(p.baseToken.name||p.baseToken.symbol||'رمز غير مسمى')+'</h3><p>'+esc(p.baseToken.symbol||'—')+' · '+esc(p.chainId)+' · عمر الزوج '+age+'</p></div></div><div class="score-block"><div class="score-number">'+r.s+'<small style="font-size:11px;color:#8da9c5">/100</small></div><div class="score-caption">مؤشر السوق</div></div></div>'+
+  '<div class="card-footer"><span class="tag '+(r.s>=c.thr?'ok':'wa')+'">'+badge+'</span><span class="rank-badge">الترتيب #'+(i+1)+'</span></div>'+
+  '<div class="token-metrics"><div class="metric"><span>السعر الحالي</span><b>'+price(p.priceUsd)+'</b></div><div class="metric"><span>القيمة السوقية</span><b>'+cap+'</b></div><div class="metric"><span>السيولة</span><b>'+money(p.liquidity?.usd)+'</b></div><div class="metric"><span>حجم 24 ساعة</span><b>'+money(p.volume?.h24)+'</b></div><div class="metric"><span>تغير 24 ساعة</span><b class="'+(ch>=0?'positive':'negative')+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</b></div><div class="metric"><span>الصفقات / 24 ساعة</span><b>'+n.toLocaleString('en-US')+'</b></div><div class="metric"><span>شراء مقابل بيع</span><b>'+(n?(buys/n*100).toFixed(0)+'% / '+(sells/n*100).toFixed(0)+'%':'غير متاح')+'</b></div><div class="metric"><span>حجم التداول / السيولة</span><b>'+(p.liquidity?.usd?(p.volume?.h24/p.liquidity.usd).toFixed(2)+'x':'—')+'</b></div></div>'+
+  '<div class="card-section"><h4>لماذا ظهر هذا المرشح؟</h4><div class="signal-list">'+li(a.pros,'')+'</div></div>'+
+  '<div class="card-section"><h4>المخاطر والتنبيهات</h4><div class="signal-list">'+risks+'</div></div>'+
+  '<div class="verification-list"><div class="verification-item">توزيع كبار الحائزين: غير متحقق</div><div class="verification-item">التوافق الشرعي: غير متحقق</div><div class="verification-item">الارتباطات المؤسسية: غير متحققة</div></div>'+
+  '<div class="recommendation"><strong>التوصية العملية</strong><p>'+a.advice.map(esc).join(' ')+'<br><b>الخلاصة:</b> مراقبة فقط، وليس أمر شراء. لا يوجد سعر دخول أو هدف رقمي لأن بيانات الشموع والدعم والمقاومة غير متاحة في هذا الفحص.</p></div>'+
+  '<div class="card-footer"><div class="token-links"><a href="'+esc(p.url||'#')+'" target="_blank" rel="noopener">السوق والرسم ↗</a><a href="'+explorer+'" target="_blank" rel="noopener">مستكشف العقد ↗</a></div><span class="note" dir="ltr">'+addr.slice(0,7)+'…'+addr.slice(-5)+'</span></div></article>';
+ }).join('');
+ $('candidateGrid').innerHTML=cards||'<div class="empty-state"><div class="empty-icon">⌁</div><h3>لم يظهر مرشح يستوفي شروط العرض</h3><p>لم نعثر على خمسة مرشحين مؤهلين. لن نملأ القائمة بعملات ضعيفة أو بفحوص أمان ناقصة. أعد الفحص لاحقاً أو راجع أسباب الاستبعاد.</p></div>';
+ $('log').innerHTML=log.length?log.map(l=>'<tr><td>'+esc(l[0])+'</td><td>'+esc(l[1])+'</td><td>'+esc(l[2])+'</td></tr>').join(''):'<tr><td colspan="3" class="note">لا توجد رموز مستبعدة في هذا الفحص.</td></tr>';
 }
 $('go').onclick=run;
 
