@@ -425,34 +425,39 @@ export default {
       });
     }
 
-    if (url.pathname === "/api/candidates") {
-      const requested = Number(
-        url.searchParams.get("limit") || 50
-      );
+    
+if (url.pathname === "/api/candidates") {
+  const requested = Number(
+    url.searchParams.get("limit") || 50
+  );
 
-      const limit = Math.max(
-        1,
-        Math.min(100, requested)
-      );
+  const limit = Math.max(
+    1,
+    Math.min(100, requested)
+  );
 
-      const result = await env.DB.prepare(`
-        SELECT *
-        FROM (
-          SELECT *,
-            ROW_NUMBER() OVER (
-              PARTITION BY network, pool_address
-              ORDER BY id DESC
-            ) AS row_number
-          FROM pool_snapshots
-        )
-        WHERE row_number = 1
-        ORDER BY preliminary_score DESC
-        LIMIT ?
-      `).bind(limit).all();
+  const result = await env.DB.prepare(`
+    SELECT *
+    FROM (
+      SELECT *,
+        ROW_NUMBER() OVER (
+          PARTITION BY network, pool_address
+          ORDER BY id DESC
+        ) AS row_number
+      FROM pool_snapshots
+    )
+    WHERE row_number = 1
+    ORDER BY scanned_at DESC
+    LIMIT ?
+  `).bind(limit).all();
 
-      return json({
-        count: result.results.length,
-        candidates: result.results
+  return json({
+    count: result.results.length,
+    sort_order: "newest_first",
+    candidates: result.results
+  });
+}
+
       });
     }
 
