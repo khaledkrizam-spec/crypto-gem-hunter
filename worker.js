@@ -378,7 +378,7 @@ export default {
       return json({
         status: "online",
         app: "Crypto Gem Hunter",
-        version: "3.2",
+        version: "3.3",
         database: env.DB ? "connected" : "not_connected",
         request_limit: "5 per minute"
       });
@@ -454,6 +454,16 @@ if (url.pathname === "/api/candidates") {
   return json({
     count: result.results.length,
     sort_order: "newest_first",
+    data_classification: "unverified_discovery_data",
+    recommendations_enabled: false,
+    required_reviews: [
+      "contract_security",
+      "holder_distribution",
+      "defi_classification",
+      "sharia_compliance",
+      "documented_israeli_connections"
+    ],
+    notice: "preliminary_score is a discovery heuristic, not a safety rating or investment recommendation",
     candidates: result.results
   });
 }
@@ -461,7 +471,7 @@ if (url.pathname === "/api/candidates") {
     return json({
       app: "Crypto Gem Hunter Engine",
       status: "running",
-      version: "3.2",
+      version: "3.3",
       endpoints: [
         "/health",
         "/api/status",
