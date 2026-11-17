@@ -1,0 +1,19 @@
+
+{
+  "name": "floral-waterfall-e2bc",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-17",
+  "triggers": {
+    "crons": [
+      "*/15 * * * *",
+      "*/5 20-22 * * *"
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crypto-gem-hunter-db",
+      "database_id": "0fe9fc63-d18a-4a38-97af-50511028f0d3"
+    }
+  ]
+}
