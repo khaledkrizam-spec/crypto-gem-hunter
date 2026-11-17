@@ -1,13 +1,10 @@
 
-const NETWORKS = [
-  "eth",
-  "bsc",
-  "base",
-  "solana",
-  "arbitrum"
-];
+const NETWORKS = ["eth", "bsc", "base", "solana", "arbitrum"];
 
 const NORMAL_CRON = "*/15 * * * *";
+
+const REQUEST_INTERVAL_MS = 12_000; // 5 requests/minute
+const LOCK_DURATION_MS = 15 * 60 * 1000;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin":
@@ -42,7 +39,6 @@ function preliminaryScore(liquidity, volume, txns, ageHours) {
   const transactionPoints =
     Math.min(20, Math.log10(txns + 1) * 6);
 
-  // لا تمنح نقاط العمر إذا كان تاريخ الإنشاء غير معروف.
   const agePoints = ageHours === null
     ? 0
     : Math.max(0, 10 - (ageHours / 48) * 10);
@@ -55,6 +51,33 @@ function preliminaryScore(liquidity, volume, txns, ageHours) {
   );
 }
 
+// حجز موعد عالمي للطلب في D1.
+// كل طلب، بما فيه إعادة المحاولة، يمر من هنا.
+async function reserveRequestSlot(env) {
+  const now = Date.now();
+
+  const row = await env.DB.prepare(`
+    UPDATE api_rate_limit
+    SET next_allowed_at =
+      MAX(next_allowed_at, ?) + ?
+    WHERE id = 1
+    RETURNING next_allowed_at
+  `).bind(now, REQUEST_INTERVAL_MS).first();
+
+  if (!row) {
+    throw new Error("Could not reserve API request slot");
+  }
+
+  const scheduledAt =
+    row.next_allowed_at - REQUEST_INTERVAL_MS;
+
+  const waitMs = Math.max(0, scheduledAt - Date.now());
+
+  if (waitMs > 0) {
+    await sleep(waitMs);
+  }
+}
+
 function getRetryDelay(response, attempt) {
   const retryAfter = response.headers.get("Retry-After");
 
@@ -62,24 +85,28 @@ function getRetryDelay(response, attempt) {
     const seconds = Number(retryAfter);
 
     if (Number.isFinite(seconds)) {
-      return Math.min(seconds * 1000, 30000);
+      return Math.max(0, seconds * 1000);
     }
 
-    const dateDelay = new Date(retryAfter).getTime() - Date.now();
+    const dateDelay =
+      new Date(retryAfter).getTime() - Date.now();
 
     if (Number.isFinite(dateDelay) && dateDelay > 0) {
-      return Math.min(dateDelay, 30000);
+      return dateDelay;
     }
   }
 
   return 2000 * Math.pow(2, attempt);
 }
 
-async function fetchNetworkPools(network) {
+async function fetchNetworkPools(network, env) {
   const url =
-    `https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?page=1`;
+    `https://api.geckoterminal.com/api/v2/networks/${network}/new_pools?include=base_token&page=1`;
 
   for (let attempt = 0; attempt < 3; attempt++) {
+    // لا يوجد طلب إلى GeckoTerminal قبل حجز موعد.
+    await reserveRequestSlot(env);
+
     const response = await fetch(url, {
       headers: {
         "Accept": "application/json;version=20230203"
@@ -93,16 +120,25 @@ async function fetchNetworkPools(network) {
     if (response.status === 429 && attempt < 2) {
       const delay = getRetryDelay(response, attempt);
 
+      // لا ننتظر زمناً غير محدود داخل Worker.
+      if (delay > 120_000) {
+        throw new Error(
+          `${network}: 429 Retry-After too long`
+        );
+      }
+
       console.log(
-        `${network}: rate limited. Retry ${attempt + 1} after ${delay}ms`
+        `${network}: 429, retry ${attempt + 1}, wait ${delay}ms`
       );
 
       await sleep(delay);
       continue;
     }
 
+    const body = await response.text();
+
     throw new Error(
-      `${network}: API returned ${response.status}`
+      `${network}: HTTP ${response.status}: ${body.slice(0, 300)}`
     );
   }
 
@@ -110,9 +146,16 @@ async function fetchNetworkPools(network) {
 }
 
 async function scanNetwork(network, env) {
-  const result = await fetchNetworkPools(network);
+  const result = await fetchNetworkPools(network, env);
 
   const pools = (result.data || []).slice(0, 5);
+
+  // بيانات العملة الأساسية التي أعادها include=base_token.
+  const includedTokens = new Map(
+    (result.included || [])
+      .filter((item) => item.type === "token")
+      .map((item) => [item.id, item.attributes || {}])
+  );
 
   let saved = 0;
 
@@ -125,6 +168,8 @@ async function scanNetwork(network, env) {
     const tokenAddress = relation.includes("_")
       ? relation.split("_").slice(1).join("_")
       : relation;
+
+    const token = includedTokens.get(relation) || {};
 
     const liquidity = number(a.reserve_in_usd);
     const volume = number(a.volume_usd?.h24);
@@ -159,8 +204,7 @@ async function scanNetwork(network, env) {
       "holder_distribution_not_checked",
       "defi_status_not_verified",
       "sharia_status_not_verified",
-      "israeli_connection_not_verified",
-      "token_symbol_not_verified"
+      "israeli_connection_not_verified"
     ];
 
     await env.DB.prepare(`
@@ -187,8 +231,8 @@ async function scanNetwork(network, env) {
       network,
       a.address || pool.id || "",
       tokenAddress,
-      a.name || "Unknown pool",
-      null,
+      token.name || "Unknown token",
+      token.symbol || null,
       number(a.base_token_price_usd),
       liquidity,
       volume,
@@ -205,7 +249,35 @@ async function scanNetwork(network, env) {
     saved++;
   }
 
-  return saved;
+  return {
+    pools_received: pools.length,
+    pools_saved: saved
+  };
+}
+
+// قفل مشترك بين Cron والطلبات اليدوية.
+async function acquireScanLock(env) {
+  const now = Date.now();
+
+  const lock = await env.DB.prepare(`
+    UPDATE scan_lock
+    SET locked_until = ?
+    WHERE id = 1 AND locked_until < ?
+    RETURNING id
+  `).bind(
+    now + LOCK_DURATION_MS,
+    now
+  ).first();
+
+  return Boolean(lock);
+}
+
+async function releaseScanLock(env) {
+  await env.DB.prepare(`
+    UPDATE scan_lock
+    SET locked_until = 0
+    WHERE id = 1
+  `).run();
 }
 
 async function runScan(env) {
@@ -213,72 +285,82 @@ async function runScan(env) {
     throw new Error("D1 database binding DB is missing");
   }
 
-  const started = new Date().toISOString();
+  const locked = await acquireScanLock(env);
 
-  let saved = 0;
-  let scanned = 0;
-
-  const errors = [];
-
-  for (let i = 0; i < NETWORKS.length; i++) {
-    const network = NETWORKS[i];
-
-    // فاصل زمني بين طلبات الشبكات.
-    if (i > 0) {
-      await sleep(5000);
-    }
-
-    try {
-      const networkSaved = await scanNetwork(network, env);
-
-      saved += networkSaved;
-      scanned++;
-
-      console.log(
-        `${network}: scan completed, saved ${networkSaved} pools`
-      );
-
-    } catch (error) {
-      errors.push({
-        network,
-        message: String(error)
-      });
-
-      console.log(`${network}: ${String(error)}`);
-    }
+  if (!locked) {
+    return {
+      status: "busy",
+      message: "Another scan is already running"
+    };
   }
 
-  // لا نسجل الفحص الفارغ كنجاح.
-  const scanStatus =
-    errors.length === 0 && saved > 0
-      ? "success"
-      : "partial";
+  try {
+    const started = new Date().toISOString();
 
-  await env.DB.prepare(`
-    INSERT INTO scan_runs (
-      started_at,
-      finished_at,
-      status,
-      networks_scanned,
-      pools_saved,
+    let saved = 0;
+    let scanned = 0;
+    let received = 0;
+
+    const errors = [];
+
+    for (const network of NETWORKS) {
+      try {
+        const result = await scanNetwork(network, env);
+
+        saved += result.pools_saved;
+        received += result.pools_received;
+        scanned++;
+
+        console.log(
+          `${network}: received ${result.pools_received}, saved ${result.pools_saved}`
+        );
+
+      } catch (error) {
+        errors.push({
+          network,
+          message: String(error)
+        });
+
+        console.log(`${network}: ${String(error)}`);
+      }
+    }
+
+    const scanStatus =
+      errors.length === 0 ? "success" : "partial";
+
+    const finished = new Date().toISOString();
+
+    await env.DB.prepare(`
+      INSERT INTO scan_runs (
+        started_at,
+        finished_at,
+        status,
+        networks_scanned,
+        pools_saved,
+        errors
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      started,
+      finished,
+      scanStatus,
+      scanned,
+      saved,
+      JSON.stringify(errors)
+    ).run();
+
+    return {
+      status: scanStatus,
+      networks_scanned: scanned,
+      pools_received: received,
+      pools_saved: saved,
+      request_limit: "5 per minute",
       errors
-    )
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).bind(
-    started,
-    new Date().toISOString(),
-    scanStatus,
-    scanned,
-    saved,
-    JSON.stringify(errors)
-  ).run();
+    };
 
-  return {
-    status: scanStatus,
-    networks_scanned: scanned,
-    pools_saved: saved,
-    errors
-  };
+  } finally {
+    await releaseScanLock(env);
+  }
 }
 
 export default {
@@ -296,9 +378,9 @@ export default {
       return json({
         status: "online",
         app: "Crypto Gem Hunter",
-        version: "3.1",
+        version: "3.2",
         database: env.DB ? "connected" : "not_connected",
-        monitoring: "cron_configured"
+        request_limit: "5 per minute"
       });
     }
 
@@ -377,6 +459,7 @@ export default {
     return json({
       app: "Crypto Gem Hunter Engine",
       status: "running",
+      version: "3.2",
       endpoints: [
         "/health",
         "/api/status",
@@ -392,7 +475,7 @@ export default {
 
     const utcHour = scheduledDate.getUTCHours();
 
-    // تجاهل Cron العادي خلال فترة الفحص المكثف.
+    // إيقاف الفحص العادي أثناء الفترة المكثفة.
     if (
       controller.cron === NORMAL_CRON &&
       utcHour >= 20 &&
