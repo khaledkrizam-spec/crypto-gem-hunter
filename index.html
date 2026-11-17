@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Crypto Gem Hunter 1.0</title>
+<title>Crypto Gem Hunter | لوحة التحليل</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#eef2f1;--card:#fff;--ink:#17302e;--mute:#5d726f;--line:#d5dfdd;--acc:#1f4e79;--ok:#2f7d4f;--warn:#b7791f;--bad:#b3362b;--okb:#e3f2e8;--warnb:#fbf0da;--badb:#f8e2df}
@@ -67,6 +68,14 @@ th{color:#9db2cb}tr.r:hover{background:#162b43}
 h2{font-size:19px;color:#f1f6ff}
 .grid{gap:14px}
 .cb{margin:8px 0}
+.dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 0 18px}
+.chart-card{min-width:0;background:linear-gradient(145deg,#101f33,#0b192b);border:1px solid #29415e;border-radius:15px;padding:16px}
+.chart-card h2{margin-bottom:4px}.chart-wrap{height:260px;position:relative;margin-top:12px}
+.section-kicker{color:#7fbaff;font-size:12px;font-weight:700;letter-spacing:.3px}
+.header-copy{color:#a9bdd5;margin:5px 0 0;font-size:13px}
+.stats div{position:relative;overflow:hidden}.stats div:after{content:"";position:absolute;inset:auto 0 0;height:3px;background:linear-gradient(90deg,#287bd0,#60c5ff)}
+.decision-note{display:flex;gap:10px;align-items:flex-start;padding:13px 15px;border:1px solid #36516e;border-radius:12px;background:#10243a;color:#b9cce2;margin:0 0 16px;font-size:13px}
+@media(max-width:760px){.dashboard{grid-template-columns:1fr}.chart-wrap{height:230px}}
 @media(max-width:650px){.w{padding:12px 10px 45px}header{padding:17px}.box{padding:14px}h1{font-size:23px}.bar button{flex:1}}
 .panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .result-card{background:#0b192b;border:1px solid #29415e;border-radius:13px;padding:15px;margin-top:12px;overflow-wrap:anywhere}
@@ -80,12 +89,12 @@ h2{font-size:19px;color:#f1f6ff}
 <body>
 <div class="w">
 <header>
- <h1>Crypto Gem Hunter<small>الإصدار 2.0</small></h1>
+ <div><div class="section-kicker">ON-DEMAND MARKET INTELLIGENCE</div><h1>Crypto Gem Hunter<small>لوحة اكتشاف وتحليل العملات</small></h1><p class="header-copy">فحص يدوي عند الطلب · بيانات السوق ومؤشرات المخاطر · دون سجل نتائج</p></div>
  <div class="bar">
   <button id="go">افحص الآن</button>
  </div>
 </header>
-<p id="st">جاهز. يبدأ الفحص عند الضغط على «افحص الآن».</p>
+<p id="st">جاهز. اضغط «افحص الآن» لجلب بيانات جديدة.</p>
 <div class="stats">
  <div><b id="s1">—</b><span>رموز جرى فحصها</span></div>
  <div><b id="s2">—</b><span>اجتازت فلاتر السوق</span></div>
@@ -93,10 +102,15 @@ h2{font-size:19px;color:#f1f6ff}
  <div><b id="s4">—</b><span>آخر تحديث</span></div>
 </div>
 
+<div class="decision-note"><span>ⓘ</span><span><b>مهم قبل اتخاذ القرار:</b> التقييم المعروض مؤشر فرز أولي مبني على بيانات السوق، وليس احتمال ربح أو حكماً نهائياً على جودة المشروع. تقرير الأمان غير المتاح لا يعني أن العقد آمن، والتوافق الشرعي والارتباطات المؤسسية يحتاجان تحققاً مستقلاً.</span></div>
+<div class="dashboard">
+ <section class="chart-card"><div class="section-kicker">MARKET RANKING</div><h2>مقارنة التقييم الأولي</h2><p class="note">درجة فرز السوق من 100 — لا تمثل توصية شراء</p><div class="chart-wrap"><canvas id="scoreChart" aria-label="مقارنة التقييم الأولي للعملات" role="img"></canvas></div></section>
+ <section class="chart-card"><div class="section-kicker">24H PRICE CHANGE</div><h2>تغير السعر خلال 24 ساعة</h2><p class="note">النسبة المئوية المسجلة في بيانات السوق وقت الفحص</p><div class="chart-wrap"><canvas id="changeChart" aria-label="تغير السعر خلال 24 ساعة" role="img"></canvas></div></section>
+</div>
 <div class="box">
- <h2>النتائج مرتبة بالتقييم</h2>
+ <h2>النتائج مرتبة بالتقييم الأولي</h2>
  <div class="tw"><table>
-  <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية / FDV</th><th>السيولة</th><th>حجم 24س</th><th>التقييم</th><th>القرار</th></tr></thead>
+  <thead><tr><th>العملة</th><th>الشبكة</th><th>السعر</th><th>القيمة السوقية / FDV</th><th>السيولة</th><th>حجم 24س</th><th>تقييم السوق الأولي</th><th>حالة الفرز</th></tr></thead>
   <tbody id="rows"><tr><td colspan="8" class="note">لا توجد نتائج بعد.</td></tr></tbody>
  </table></div>
  <p class="note">تعرض هذه القائمة حتى 5 رموز اجتازت فلاتر السوق وتقرير مخاطر العقد المتاح. لم يتم إثبات توزيع كبار الحائزين أو التوافق الشرعي أو الارتباطات المؤسسية؛ هذه نقاط مراجعة بشرية موثقة وليست نتائج آلية.</p>
@@ -302,11 +316,28 @@ async function run(){
  }catch(e){$('st').textContent='تعذر الجلب: '+e.message+'. تحقق من الاتصال وأعد المحاولة.'}
  $('go').disabled=false;
 }
+let scoreChartInstance=null,changeChartInstance=null;
+function drawCharts(items){
+ const labels=items.map(x=>(x.p.baseToken.symbol||'—').toUpperCase());
+ const scores=items.map(x=>x.r.s);
+ const changes=items.map(x=>Number(x.p.priceChange?.h24??0));
+ const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#07111f',titleColor:'#fff',bodyColor:'#dce9f8',padding:11}},scales:{x:{ticks:{color:'#a9bdd5'},grid:{color:'#233650'}},y:{ticks:{color:'#a9bdd5'},grid:{color:'#233650'}}}};
+ if(scoreChartInstance)scoreChartInstance.destroy();
+ if(changeChartInstance)changeChartInstance.destroy();
+ const a=document.getElementById('scoreChart'),b=document.getElementById('changeChart');
+ if(!a||!b||typeof Chart==='undefined'){
+  document.querySelectorAll('.chart-wrap').forEach(x=>x.innerHTML='<p class="note">تعذر تحميل مكتبة الرسوم. أعد تحميل الصفحة مع اتصال بالإنترنت.</p>');
+  return;
+ }
+ scoreChartInstance=new Chart(a,{type:'bar',data:{labels,datasets:[{data:scores,backgroundColor:'#4da3ff',borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:'#a9bdd5'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}}}});
+ changeChartInstance=new Chart(b,{type:'bar',data:{labels,datasets:[{data:changes,backgroundColor:changes.map(v=>v>=0?'#42d392':'#ff6b75'),borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{ticks:{color:'#a9bdd5',callback:v=>v+'%'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}},plugins:{...base.plugins,tooltip:{...base.plugins.tooltip,callbacks:{label:c=>c.raw.toFixed(2)+'%'}}}}});
+}
 function render(res,log,tot){
  const shown=res.filter(x=>x.r.d==='تحتاج مراجعة نهائية'&&x.r.verified&&!(cfg().sec&&x.r.hard.length)).slice(0,5);
  $('s1').textContent=tot;$('s2').textContent=res.length;$('s3').textContent=shown.length;
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});
- $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span>${r.s}</td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join('') :'<tr><td colspan="8" class="note">لا توجد حالياً رموز اجتازت شروط السوق وفحص الأمان. هذا أفضل من عرض فرص غير مكتملة.</td></tr>';
+ drawCharts(shown);
+ $('rows').innerHTML=shown.length?shown.map(({p,r},i)=>`<tr class="r" data-i="${i}" tabindex="0"><td><b>${esc(p.baseToken.symbol)}</b> <span class="note">${esc(p.baseToken.name)}</span></td><td>${esc(p.chainId)}</td><td class="n">${price(p.priceUsd)}</td><td class="n">${money(p.marketCap||p.fdv)}</td><td class="n">${money(p.liquidity?.usd)}</td><td class="n">${money(p.volume?.h24)}</td><td><span class="sc"><i style="width:${r.s}%"></i></span><b>${r.s}/100</b></td><td><span class="tag ${r.cls}">${r.d}</span>${r.verified?'':' <span class="note">(أمان غير مؤكد)</span>'}</td></tr>`).join('') :'<tr><td colspan="8" class="note">لا توجد حالياً رموز اجتازت شروط السوق وفحص الأمان. هذا أفضل من عرض فرص غير مكتملة.</td></tr>';
  document.querySelectorAll('tr.r').forEach(tr=>{const f=()=>{const nx=tr.nextElementSibling;if(nx&&nx.classList.contains('dt')){nx.remove();return}const {p,r}=shown[tr.dataset.i];const li=(a,c)=>a.map(x=>`<li class="${c}">${esc(x)}</li>`).join('');tr.insertAdjacentHTML('afterend',`<tr class="dt"><td colspan="8"><ul>${li(r.hard,'m')}${li(r.pro,'p')}${li(r.con,'i')}</ul><a href="${esc(p.url)}" target="_blank" rel="noopener">فتح الرسم على DEX Screener</a> · <span class="dir">${esc(p.baseToken.address)}</span></td></tr>`)};tr.onclick=f;tr.onkeydown=e=>{if(e.key==='Enter')f()}});
  $('log').innerHTML=log.length?log.map(l=>`<tr><td>${esc(l[0])}</td><td>${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
 }
