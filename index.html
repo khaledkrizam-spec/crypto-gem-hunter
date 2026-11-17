@@ -186,10 +186,12 @@ async function secEvm(chain,addrs){
  for(let i=0;i<addrs.length;i+=20){
   const b=addrs.slice(i,i+20);
   try{const j=await fj(`https://api.gopluslabs.io/api/v1/token_security/${GP[chain]}?contract_addresses=${b.join(',')}`);
-   for(const a of b){const r=j.result&&j.result[a.toLowerCase()];if(r)out[a.toLowerCase()]=evmRead(r)}}catch(e){}
+   for(const a of b){const r=j.result&&j.result[a.toLowerCase()];if(r){const parsed=evmRead(r);if(parsed)out[a.toLowerCase()]=parsed}}}catch(e){}
  }return out;
 }
 function evmRead(r){
+ const required=['is_honeypot','is_open_source','is_mintable','cannot_sell_all','holder_count','buy_tax','sell_tax'];
+ if(required.some(k=>r[k]===undefined||r[k]===null))return null;
  const bad=[],good=[],info=[],st=+r.sell_tax||0,bt=+r.buy_tax||0;
  if(r.is_honeypot==='1')bad.push('honeypot: لا يمكن البيع');
  if(r.cannot_sell_all==='1')bad.push('لا يمكن بيع كامل الكمية');
@@ -207,6 +209,7 @@ function evmRead(r){
 }
 async function secSol(a){
  try{const j=await fj(`https://api.rugcheck.xyz/v1/tokens/${a}/report/summary`);
+  if(!j||!Array.isArray(j.risks))return null;
   const bad=[],good=[],info=[];
   (j.risks||[]).forEach(x=>{(x.level==='danger'?bad:info).push(x.name)});
   if(!bad.length)good.push('لا مخاطر حرجة في RugCheck');
