@@ -83,8 +83,6 @@ h2{font-size:19px;color:#f1f6ff}
  <h1>Crypto Gem Hunter<small>الإصدار 2.0</small></h1>
  <div class="bar">
   <button id="go">افحص الآن</button>
-  <button class="g" id="auto">التحديث التلقائي: متوقف</button>
-  <button class="g" id="csv">تصدير CSV</button>
  </div>
 </header>
 <p id="st">جاهز. يبدأ الفحص عند الضغط على «افحص الآن».</p>
@@ -151,7 +149,7 @@ h2{font-size:19px;color:#f1f6ff}
 </div>
 
 <div class="box">
- <h2>سجل الاستبعاد</h2>
+ <h2>أسباب الاستبعاد في هذا البحث</h2>
  <div class="tw"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>السبب</th></tr></thead><tbody id="log"><tr><td colspan="3" class="note">يظهر هنا سبب استبعاد كل رمز.</td></tr></tbody></table></div>
 </div>
 
@@ -168,7 +166,7 @@ const GP={ethereum:1,bsc:56,base:8453,arbitrum:42161,polygon:137,avalanche:43114
 const CH=new Set([...Object.keys(GP),'solana']);
 const DEFI=/\b(swap|dex|lend|lending|yield|farm|staking|stake|vault|bridge|liquidity|protocol|amm|perp|derivatives|usd|usdt|usdc|stable|wrapped|wbtc|weth)\b/i;
 const IDS=['minLiq','minVol','minMc','maxMc','maxAge','minAge','thr','lim','ex'];
-let results=[],timer=null;
+let results=[];
 
 // الإعدادات
 try{const s=JSON.parse(localStorage.getItem('cgh')||'{}');IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i]});['fSec','fDefi'].forEach(i=>{if(s[i]!=null)$(i).checked=s[i]})}catch(e){}
@@ -313,8 +311,6 @@ function render(res,log,tot){
  $('log').innerHTML=log.length?log.map(l=>`<tr><td>${esc(l[0])}</td><td>${esc(l[1])}</td><td>${esc(l[2])}</td></tr>`).join(''):'<tr><td colspan="3" class="note">لا استبعادات.</td></tr>';
 }
 $('go').onclick=run;
-$('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('auto').textContent='التحديث التلقائي: متوقف'}else{timer=setInterval(run,9e5);$('auto').textContent='التحديث التلقائي: كل 15 دقيقة';run()}};
-$('csv').onclick=()=>{if(!results.length)return;const h='symbol,chain,price,mcap,liquidity,vol24h,score,decision,address\n';const b=results.filter(({r})=>r.d==='تحتاج مراجعة نهائية'&&r.verified).slice(0,5).map(({p,r})=>[p.baseToken.symbol,p.chainId,p.priceUsd,p.marketCap||p.fdv,p.liquidity?.usd,p.volume?.h24,r.s,r.d,p.baseToken.address].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+h+b],{type:'text/csv'}));a.download='gem-hunter.csv';a.click()};
 
 const EXPLORERS={solana:'https://solscan.io/token/',ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'};
 const NETWORK_NAMES={solana:'Solana',ethereum:'Ethereum',bsc:'BNB Chain',base:'Base',arbitrum:'Arbitrum',polygon:'Polygon',avalanche:'Avalanche',optimism:'Optimism'};
