@@ -121,9 +121,9 @@ body{background:radial-gradient(ellipse at 80% -10%,#193b62 0,transparent 36%),r
 
 
 
-<section class="results-head"><div><div class="section-kicker">LIVE OPPORTUNITY RADAR</div><h2>أفضل 5 مرشحين من نتائج هذا الفحص</h2><p class="note">ترتيب بحسب مؤشرات قابلة للقياس، وليس توقعاً مؤكداً للانفجار السعري.</p></div><div class="result-legend"><span><i class="dot green"></i> إيجابي</span><span><i class="dot amber"></i> يحتاج تحققاً</span><span><i class="dot red"></i> خطر</span></div></section>
+<section class="results-head"><div><div class="section-kicker">LIVE OPPORTUNITY RADAR</div><h2>أفضل 5 مرشحين من نتائج هذا الفحص</h2><p class="note">ترتيب استرشادي لمؤشرات السوق؛ الدرجة ليست مقياس أمان ولا احتمال ربح.</p></div><div class="result-legend"><span><i class="dot green"></i> إيجابي</span><span><i class="dot amber"></i> يحتاج تحققاً</span><span><i class="dot red"></i> خطر</span></div></section>
 <div class="candidate-grid" id="candidateGrid"><div class="empty-state"><div class="empty-icon">⌁</div><h3>الرادار جاهز</h3><p>اضغط ابدأ الفحص المباشر لجلب البيانات وترتيب المرشحين.</p></div></div>
-<div class="box chart-section"><div class="section-kicker">MARKET SNAPSHOT</div><h2>مقارنة المرشحين</h2><div class="dashboard"><section class="chart-card"><h3>مؤشر السوق من 100</h3><p class="note">ليس احتمال ربح.</p><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></section><section class="chart-card"><h3>تغير السعر خلال 24 ساعة</h3><p class="note">قراءة وقت الفحص.</p><div class="chart-wrap"><canvas id="changeChart"></canvas></div></section></div></div>
+<div class="box chart-section"><div class="section-kicker">MARKET SNAPSHOT</div><h2>مقارنة المرشحين</h2><div class="dashboard"><section class="chart-card"><h3>مؤشر الفرصة التقديري من 100</h3><p class="note">ليس احتمال ربح.</p><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></section><section class="chart-card"><h3>تغير السعر خلال 24 ساعة</h3><p class="note">قراءة وقت الفحص.</p><div class="chart-wrap"><canvas id="changeChart"></canvas></div></section></div></div>
 <div class="box"><h3>سجل الاستبعاد لهذا الفحص</h3><div class="tw"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>سبب الاستبعاد</th></tr></thead><tbody id="log"><tr><td colspan="3" class="note">سيظهر سبب الاستبعاد هنا.</td></tr></tbody></table></div></div>
 <div class="box methodology"><h3>حدود الفحص</h3><p class="note">لا يستطيع الفحص وحده إثبات توزيع كبار الحائزين أو التوافق الشرعي أو غياب الارتباطات المؤسسية. ستظهر هذه العناصر كغير متحققة ولن تُحسب نقاطاً إيجابية. كما لا يحدد سعراً مستهدفاً دون بيانات شموع ودعم ومقاومة موثوقة.</p></div>
 
@@ -252,38 +252,48 @@ async function candleAnalysis(p){
 
 // التقييم
 function score(p,sec,c){
- const liq=p.liquidity?.usd||0,vol=p.volume?.h24||0,mc=p.marketCap||p.fdv||0,tx=p.txns?.h24||{buys:0,sells:0},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells;
- const age=Number.isFinite(p.pairCreatedAt)?(Date.now()-p.pairCreatedAt)/864e5:NaN,ch=p.priceChange?.h24??0,vl=liq>0?vol/liq:Infinity,lm=mc>0?liq/mc:0,br=n?buys/n:0.5;
+ const liq=Number(p.liquidity?.usd||0),vol=Number(p.volume?.h24||0),mc=Number(p.marketCap||p.fdv||0),tx=p.txns?.h24||{buys:0,sells:0},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells;
+ const age=Number.isFinite(p.pairCreatedAt)?(Date.now()-p.pairCreatedAt)/864e5:NaN,ch=Number(p.priceChange?.h24||0),vl=liq>0?vol/liq:Infinity,lm=mc>0?liq/mc:0,br=n?buys/n:0.5,avgTx=n>0?vol/n:0;
  const pro=[],con=[],hard=[];let s=0;
  const a=Math.min(15,15*Math.log10(liq/c.minLiq+1)/Math.log10(5));s+=a;
  (liq>=100000?pro:con).push(`سيولة ${money(liq)}`);
- if(vl>=0.5&&vl<=10){s+=15;pro.push(`حجم/سيولة ${vl.toFixed(1)}x صحي`)}
- else if(vl<0.5){s+=vl*20;con.push(`نشاط ضعيف (${vl.toFixed(2)}x)`)}
- else if(vl<=40){s+=8;con.push(`نشاط مرتفع جداً (${vl.toFixed(0)}x)`)}
- else{hard.push(`تداول مشبوه: حجم ${vl.toFixed(0)}x السيولة`)}
- if(lm>=0.08){s+=10;pro.push(`سيولة ${(lm*100).toFixed(0)}% من القيمة السوقية`)}
- else if(lm>=0.03){s+=5;con.push(`سيولة ${(lm*100).toFixed(1)}% من القيمة السوقية`)}
- else con.push(`سيولة هزيلة مقارنة بالقيمة (${(lm*100).toFixed(1)}%)`);
- if(br>=0.45&&br<=0.65){s+=10;pro.push(`توازن شراء/بيع ${(br*100).toFixed(0)}%`)}
- else if(br>0.65&&br<=0.8){s+=5;con.push('ضغط شراء غير طبيعي، قد يكون تحفيزاً مصطنعاً')}
- else if(br<0.4)con.push(`ضغط بيع ${((1-br)*100).toFixed(0)}%`);
- if(n>=1000){s+=10;pro.push(`${n} صفقة`)}else if(n>=300){s+=6;pro.push(`${n} صفقة`)}else con.push(`صفقات قليلة (${n})`);
- if(age>=1&&age<=14){s+=5;pro.push(`عمر ${age.toFixed(1)} يوم`)}else if(age<1)con.push('عمر أقل من يوم');
- if(ch>=-5&&ch<=25){s+=10;pro.push(`زخم 24س متزن ${ch.toFixed(1)}%`)}
+ if(vl>=0.5&&vl<=10){s+=15;pro.push(`حجم/سيولة ${vl.toFixed(1)}x ضمن النطاق`)}
+ else if(vl<0.5){s+=Math.max(0,vl*20);con.push(`نشاط تداول منخفض (${vl.toFixed(2)}x)`)}
+ else if(vl<=20){s+=7;con.push(`حجم التداول مرتفع جداً نسبةً للسيولة (${vl.toFixed(1)}x)`)}
+ else if(vl<=40){s+=2;con.push(`حجم التداول شديد الارتفاع نسبةً للسيولة (${vl.toFixed(1)}x)`)}
+ else{hard.push(`تداول غير طبيعي: حجم ${vl.toFixed(1)} ضعف السيولة؛ يحتاج استبعاداً`)}
+ if(lm>=0.20){s+=15;pro.push(`السيولة ${(lm*100).toFixed(1)}% من القيمة السوقية`)}
+ else if(lm>=0.10){s+=10;pro.push(`السيولة ${(lm*100).toFixed(1)}% من القيمة السوقية`)}
+ else if(lm>=0.05){s+=5;con.push(`السيولة منخفضة نسبياً: ${(lm*100).toFixed(1)}% من القيمة السوقية`)}
+ else if(lm>=0.03){s+=2;con.push(`السيولة ضعيفة: ${(lm*100).toFixed(1)}% من القيمة السوقية`)}
+ else{con.push(`السيولة هزيلة مقارنة بالقيمة السوقية: ${(lm*100).toFixed(1)}%`);s-=5}
+ if(br>=0.45&&br<=0.65){s+=5;pro.push(`توازن نسبي بين الشراء والبيع (${(br*100).toFixed(0)}% شراء)`)}
+ else if(br>0.65&&br<=0.8){s+=2;con.push('ضغط شراء مرتفع؛ قد يكون اندفاعاً قصير الأجل')}
+ else if(br>0.8){con.push('هيمنة شراء حادة وغير متوازنة')}
+ else if(br<0.4)con.push(`ضغط بيع مرتفع (${((1-br)*100).toFixed(0)}%)`);
+ if(n<100)con.push(`عدد صفقات منخفض (${n})`);
+ if(n>0&&avgTx>=2){s+=5;pro.push(`متوسط قيمة الصفقة التقريبي ${money(avgTx)}`)}
+ else if(n>0&&avgTx>=1){s+=3;con.push(`متوسط قيمة الصفقة التقريبي ${money(avgTx)}؛ محدود`)}
+ else if(n>0){s+=Math.max(0,avgTx*3);con.push(`متوسط قيمة الصفقة التقريبي منخفض جداً (${money(avgTx)}). قد يعكس صفقات صغيرة أو آلية؛ ليس دليلاً وحده على التلاعب`)}
+ if(age>=1&&age<=14){s+=5;pro.push(`عمر الزوج ${age.toFixed(1)} يوم`)}else if(age<1)con.push('عمر الزوج أقل من يوم؛ بياناته قصيرة');
+ if(ch>=-5&&ch<=25){s+=10;pro.push(`تغير 24س متزن نسبياً ${ch.toFixed(1)}%`)}
  else if(ch>25&&ch<=60){s+=5;con.push(`ارتفاع سريع ${ch.toFixed(1)}%؛ لا تطارد السعر`)}
- else if(ch>60){s+=1;con.push(`اندفاع سعري ${ch.toFixed(1)}%؛ خطر شراء القمة`)}
+ else if(ch>60&&ch<=100){s+=1;con.push(`اندفاع سعري ${ch.toFixed(1)}%؛ خطر شراء القمة`)}
+ else if(ch>100&&ch<=500){s-=8;con.push(`ارتفاع حاد جداً ${ch.toFixed(1)}%؛ يلزم استقرار قبل التقييم`)}
+ else if(ch>500){hard.push(`ارتفاع متطرف خلال 24س (${ch.toFixed(0)}%)؛ استبعاد مؤقت حتى يستقر السعر`)}
  else if(ch<-20){con.push(`هبوط ${ch.toFixed(1)}%؛ ضغط سلبي`)}else{s+=5;con.push(`تغير 24س ${ch.toFixed(1)}%`)}
  const w=p.info?.websites?.length,t=(p.info?.socials||[]).some(x=>x.type==='twitter');
  if(w&&t){s+=5;pro.push('موقع وحساب X معلنان')}else if(w||t){s+=2;con.push('حضور علني جزئي')}else con.push('لا موقع ولا حساب X');
  let verified=false;
- if(sec){verified=true;(sec.bad||[]).forEach(x=>hard.push(x));(sec.good||[]).forEach(x=>pro.push(x));(sec.info||[]).forEach(x=>con.push(x));if(!(sec.bad||[]).length)s+=20}
- else{con.push('فحص أمان العقد غير متاح؛ لا تُمنح نقاط أمان')}
- s=Math.round(Math.min(100,s));
+ if(sec){verified=true;(sec.bad||[]).forEach(x=>hard.push(x));(sec.good||[]).forEach(x=>pro.push(x));(sec.info||[]).forEach(x=>con.push(x));if(!(sec.bad||[]).length)con.push('لم تظهر مخاطر حرجة في تقرير المصدر المتاح؛ هذا لا يثبت سلامة العقد')}
+ else{con.push('فحص أمان العقد غير متاح؛ الحالة غير معروفة')}
+ // الحد الأعلى النظري 75 نقطة: تُحوّل إلى مقياس 100، وهو مؤشر فرصة لا درجة أمان.
+ s=Math.round(Math.max(0,Math.min(100,(s/75)*100)));
  let d,cls;
  if(hard.length||s<45){d='تجنب';cls='ba'}
  else if(s>=c.thr&&verified){d='مرشح للمراقبة';cls='ok'}
  else{d='مراقبة حذرة';cls='wa'}
- return{s,d,cls,pro,con,hard,verified,age};
+ return{s,d,cls,pro,con,hard,verified,age,avgTx,txCount:n,liqRatio:lm};
 }
 
 // الفحص
@@ -373,11 +383,11 @@ function render(res,log,tot){
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);
  const cards=shown.map(({p,r,candles},i)=>{
   const a=candidateAdvice(p,r,candles),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,ch=Number(p.priceChange?.h24||0),age=Number.isFinite(r.age)?r.age.toFixed(1)+' يوم':'غير متاح',cap=p.marketCap?money(p.marketCap):money(p.fdv)+' FDV';
-  const badge=r.s>=c.thr?'مراقبة ذات أولوية':'مراقبة حذرة',li=(arr,cls)=>arr.length?arr.map(x=>'<span class="signal '+cls+'">'+esc(x)+'</span>').join(''):'<span class="signal warn">لا توجد بيانات كافية لإثبات ذلك</span>',risks=a.risks.length?li(a.risks,'risk'):'<span class="signal">لم يرصد الفاحص خطراً حرجاً ضمن البيانات المتاحة</span>';
+  const badge=r.s>=c.thr?'مراقبة ذات أولوية':'مراقبة حذرة',li=(arr,cls)=>arr.length?arr.map(x=>'<span class="signal '+cls+'">'+esc(x)+'</span>').join(''):'<span class="signal warn">لا توجد بيانات كافية لإثبات ذلك</span>',risks=a.risks.length?li(a.risks,'risk'):'<span class="signal">لم تظهر مخاطر حرجة في تقرير المصدر المتاح؛ لا يعني ذلك أن العقد آمن</span>';
   const addr=esc(p.baseToken.address||''),explorer=p.chainId==='solana'?'https://solscan.io/token/'+encodeURIComponent(addr):({ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'}[p.chainId]||'')+encodeURIComponent(addr);
-  return '<article class="candidate-card"><div class="candidate-top"><div class="token-id"><div class="token-avatar">'+esc((p.baseToken.symbol||'?').slice(0,3).toUpperCase())+'</div><div class="token-title"><h3>'+esc(p.baseToken.name||p.baseToken.symbol||'رمز غير مسمى')+'</h3><p>'+esc(p.baseToken.symbol||'—')+' · '+esc(p.chainId)+' · عمر الزوج '+age+'</p></div></div><div class="score-block"><div class="score-number">'+r.s+'<small style="font-size:11px;color:#8da9c5">/100</small></div><div class="score-caption">مؤشر السوق</div></div></div>'+
+  return '<article class="candidate-card"><div class="candidate-top"><div class="token-id"><div class="token-avatar">'+esc((p.baseToken.symbol||'?').slice(0,3).toUpperCase())+'</div><div class="token-title"><h3>'+esc(p.baseToken.name||p.baseToken.symbol||'رمز غير مسمى')+'</h3><p>'+esc(p.baseToken.symbol||'—')+' · '+esc(p.chainId)+' · عمر الزوج '+age+'</p></div></div><div class="score-block"><div class="score-number">'+r.s+'<small style="font-size:11px;color:#8da9c5">/100</small></div><div class="score-caption">مؤشر فرصة لا مقياس أمان</div></div></div>'+
   '<div class="card-footer"><span class="tag '+(r.s>=c.thr?'ok':'wa')+'">'+badge+'</span><span class="rank-badge">الترتيب #'+(i+1)+'</span></div>'+
-  '<div class="token-metrics"><div class="metric"><span>السعر الحالي</span><b>'+price(p.priceUsd)+'</b></div><div class="metric"><span>القيمة السوقية</span><b>'+cap+'</b></div><div class="metric"><span>السيولة</span><b>'+money(p.liquidity?.usd)+'</b></div><div class="metric"><span>حجم 24 ساعة</span><b>'+money(p.volume?.h24)+'</b></div><div class="metric"><span>تغير 24 ساعة</span><b class="'+(ch>=0?'positive':'negative')+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</b></div><div class="metric"><span>الصفقات / 24 ساعة</span><b>'+n.toLocaleString('en-US')+'</b></div><div class="metric"><span>شراء مقابل بيع</span><b>'+(n?(buys/n*100).toFixed(0)+'% / '+(sells/n*100).toFixed(0)+'%':'غير متاح')+'</b></div><div class="metric"><span>حجم التداول / السيولة</span><b>'+(p.liquidity?.usd?(p.volume?.h24/p.liquidity.usd).toFixed(2)+'x':'—')+'</b></div></div>'+
+  '<div class="token-metrics"><div class="metric"><span>السعر الحالي</span><b>'+price(p.priceUsd)+'</b></div><div class="metric"><span>القيمة السوقية</span><b>'+cap+'</b></div><div class="metric"><span>السيولة</span><b>'+money(p.liquidity?.usd)+'</b></div><div class="metric"><span>حجم 24 ساعة</span><b>'+money(p.volume?.h24)+'</b></div><div class="metric"><span>تغير 24 ساعة</span><b class="'+(ch>=0?'positive':'negative')+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</b></div><div class="metric"><span>الصفقات / 24 ساعة</span><b>'+n.toLocaleString('en-US')+'</b></div><div class="metric"><span>متوسط الصفقة التقريبي</span><b>'+(n?money((p.volume?.h24||0)/n):'—')+'</b></div><div class="metric"><span>شراء مقابل بيع</span><b>'+(n?(buys/n*100).toFixed(0)+'% / '+(sells/n*100).toFixed(0)+'%':'غير متاح')+'</b></div><div class="metric"><span>حجم التداول / السيولة</span><b>'+(p.liquidity?.usd?(p.volume?.h24/p.liquidity.usd).toFixed(2)+'x':'—')+'</b></div></div>'+
   '<div class="card-section"><h4>تحليل الشموع — GeckoTerminal (ساعة)</h4><div class="signal-list">'+(candles?.rsi!=null?'<span class="signal '+(candles.rsi>=70?'warn':candles.rsi<=30?'risk':'')+'">RSI: '+candles.rsi.toFixed(1)+'</span><span class="signal">حركة آخر 6 ساعات: '+(candles.move>0?'+':'')+candles.move.toFixed(2)+'%</span><span class="signal">نطاق آخر 24 شمعة: '+price(candles.low)+' – '+price(candles.high)+'</span><span class="signal">شموع متاحة: '+candles.count+'</span>':'<span class="signal warn">بيانات الشموع غير كافية أو لم تصل من المصدر</span>')+'</div><p class="note">RSI مؤشر زخم وليس إشارة شراء مستقلة. النطاق السعري ليس ضماناً للدعم أو المقاومة.</p></div>'+
   '<div class="card-section"><h4>لماذا ظهر هذا المرشح؟</h4><div class="signal-list">'+li(a.pros,'')+'</div></div>'+
   '<div class="card-section"><h4>المخاطر والتنبيهات</h4><div class="signal-list">'+risks+'</div></div>'+
