@@ -438,7 +438,7 @@ function candidateAdvice(p,r,candles){
  return{pros:r.pro,risks:[...r.hard,...r.con],advice};
 }
 function render(res,log,tot){
- const c=cfg(),eligible=res.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).sort((a,b)=>b.r.s-a.r.s),shown=eligible.slice(0,5);
+ const c=cfg(),eligible=res.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).sort((a,b)=>Number(b.candles?.fib?.status==='مرشح دخول')-Number(a.candles?.fib?.status==='مرشح دخول')||b.r.s-a.r.s),shown=eligible.slice(0,5);
  $('s1').textContent=tot;$('s2').textContent=res.filter(x=>x.r.verified&&!x.r.hard.length).length;$('s3').textContent=shown.length;
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);
  const cards=shown.map(({p,r,candles},i)=>{
