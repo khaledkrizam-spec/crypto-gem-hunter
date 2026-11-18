@@ -110,6 +110,16 @@ body{background:radial-gradient(ellipse at 80% -10%,#193b62 0,transparent 36%),r
 .advanced{border:1px solid #243b55;border-radius:14px;background:#0c1929;margin:13px 0;overflow:hidden}.advanced summary{padding:14px 17px;cursor:pointer;color:#b8d4ef;font-size:13px;font-weight:700}.advanced .box{margin:0;border:0;box-shadow:none}.advanced[open] summary{border-bottom:1px solid #243b55}
 @media(max-width:900px){.candidate-grid{grid-template-columns:1fr}.hero{align-items:flex-start;flex-direction:column}.hero-actions{width:100%;justify-content:space-between}}
 @media(max-width:620px){.w{padding:12px 10px 45px}.hero{padding:18px;border-radius:16px}.brand-mark{width:48px;height:48px}.hero h1{font-size:21px}.hero-actions{align-items:stretch;flex-direction:column}.scan-button{width:100%}.compact-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.token-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.verification-list{grid-template-columns:1fr}.candidate-card{padding:14px}}
+.paper-trade{border:1px solid #294360;border-radius:16px;background:linear-gradient(145deg,#102239,#0b192a);padding:18px;margin:16px 0}
+.paper-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.paper-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:13px 0}
+.paper-stats div{background:#0a1727;border:1px solid #243d58;border-radius:10px;padding:10px}
+.paper-stats b{display:block;font-size:19px;color:#f1f7ff}.paper-stats span{font-size:11px;color:#91a5bf}
+.paper-row{border-top:1px solid #263d56;padding:12px 2px;display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;font-size:12px}
+.paper-row strong{color:#eaf4ff}.paper-row .muted{color:#91a5bf}
+.paper-positive{color:#58dda8}.paper-negative{color:#ff8993}
+@media(max-width:620px){.paper-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.paper-row{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -123,6 +133,14 @@ body{background:radial-gradient(ellipse at 80% -10%,#193b62 0,transparent 36%),r
 
 <section class="results-head"><div><div class="section-kicker">LIVE OPPORTUNITY RADAR</div><h2>أفضل 5 مرشحين من نتائج هذا الفحص</h2><p class="note">ترتيب استرشادي لمؤشرات السوق؛ الدرجة ليست مقياس أمان ولا احتمال ربح.</p></div><div class="result-legend"><span><i class="dot green"></i> إيجابي</span><span><i class="dot amber"></i> يحتاج تحققاً</span><span><i class="dot red"></i> خطر</span></div></section>
 <div class="candidate-grid" id="candidateGrid"><div class="empty-state"><div class="empty-icon">⌁</div><h3>الرادار جاهز</h3><p>اضغط ابدأ الفحص المباشر لجلب البيانات وترتيب المرشحين.</p></div></div>
+<section class="paper-trade" id="paperTrade">
+ <div class="paper-head"><div><div class="section-kicker">7-DAY PAPER TEST</div><h2>الاختبار الافتراضي — 7 أيام</h2><p class="note">يسجل إشارات «مرشح دخول» فقط، ويتابعها عند كل فحص يدوي. لا توجد أوامر شراء حقيقية.</p></div>
+ <div class="bar"><button id="startPaper">ابدأ اختبار 7 أيام</button><button class="g" id="deletePaper">حذف سجل الاختبار</button></div></div>
+ <p class="note" id="paperStatus">لم يبدأ الاختبار بعد. ابدأه لتسجيل الإشارات القادمة.</p>
+ <div class="paper-stats"><div><b id="paperCount">0</b><span>صفقات مسجلة</span></div><div><b id="paperOpen">0</b><span>مفتوحة</span></div><div><b id="paperClosed">0</b><span>مغلقة</span></div><div><b id="paperNet">—</b><span>متوسط صافي النتيجة %</span></div></div>
+ <div id="paperRows"><p class="note">لا توجد صفقات افتراضية حتى الآن.</p></div>
+ <p class="note">حساب النتيجة يفترض تكلفة إجمالية تقديرية 1.5% للرسوم والانزلاق، وقد تكون التكلفة الفعلية أعلى. المتابعة تحدث عند الضغط على «ابدأ الفحص المباشر» فقط؛ لا توجد مراقبة تلقائية. الأسعار بين الفحوصات قد تتجاوز الوقف أو الهدف دون أن نرصد ذلك.</p>
+</section>
 <div class="box chart-section"><div class="section-kicker">MARKET SNAPSHOT</div><h2>مقارنة المرشحين</h2><div class="dashboard"><section class="chart-card"><h3>مؤشر الفرصة التقديري من 100</h3><p class="note">ليس احتمال ربح.</p><div class="chart-wrap"><canvas id="scoreChart"></canvas></div></section><section class="chart-card"><h3>تغير السعر خلال 24 ساعة</h3><p class="note">قراءة وقت الفحص.</p><div class="chart-wrap"><canvas id="changeChart"></canvas></div></section></div></div>
 <div class="box"><h3>سجل الاستبعاد لهذا الفحص</h3><div class="tw"><table><thead><tr><th>العملة</th><th>الشبكة</th><th>سبب الاستبعاد</th></tr></thead><tbody id="log"><tr><td colspan="3" class="note">سيظهر سبب الاستبعاد هنا.</td></tr></tbody></table></div></div>
 <div class="box methodology"><h3>حدود الفحص</h3><p class="note">لا يستطيع الفحص وحده إثبات توزيع كبار الحائزين أو التوافق الشرعي أو غياب الارتباطات المؤسسية. ستظهر هذه العناصر كغير متحققة ولن تُحسب نقاطاً إيجابية. كما لا يحدد سعراً مستهدفاً دون بيانات شموع ودعم ومقاومة موثوقة.</p></div>
@@ -440,7 +458,7 @@ function candidateAdvice(p,r,candles){
 function render(res,log,tot){
  const c=cfg(),eligible=res.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).sort((a,b)=>Number(b.candles?.fib?.status==='مرشح دخول')-Number(a.candles?.fib?.status==='مرشح دخول')||b.r.s-a.r.s),shown=eligible.slice(0,5);
  $('s1').textContent=tot;$('s2').textContent=res.filter(x=>x.r.verified&&!x.r.hard.length).length;$('s3').textContent=shown.length;
- $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);
+ $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);paperProcess(shown);
  const cards=shown.map(({p,r,candles},i)=>{
   const a=candidateAdvice(p,r,candles),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,ch=Number(p.priceChange?.h24||0),age=Number.isFinite(r.age)?r.age.toFixed(1)+' يوم':'غير متاح',cap=p.marketCap?money(p.marketCap):money(p.fdv)+' FDV';
   const badge=r.s>=c.thr?'مراقبة ذات أولوية':'مراقبة حذرة',li=(arr,cls)=>arr.length?arr.map(x=>'<span class="signal '+cls+'">'+esc(x)+'</span>').join(''):'<span class="signal warn">لا توجد بيانات كافية لإثبات ذلك</span>',risks=a.risks.length?li(a.risks,'risk'):'<span class="signal">لم تظهر مخاطر حرجة في تقرير المصدر المتاح؛ لا يعني ذلك أن العقد آمن</span>';
@@ -459,6 +477,59 @@ function render(res,log,tot){
  $('candidateGrid').innerHTML=cards||'<div class="empty-state"><div class="empty-icon">⌁</div><h3>لم يظهر مرشح يستوفي شروط العرض</h3><p>لم نعثر على خمسة مرشحين مؤهلين. لن نملأ القائمة بعملات ضعيفة أو بفحوص أمان ناقصة. أعد الفحص لاحقاً أو راجع أسباب الاستبعاد.</p></div>';
  $('log').innerHTML=log.length?log.map(l=>'<tr><td>'+esc(l[0])+'</td><td>'+esc(l[1])+'</td><td>'+esc(l[2])+'</td></tr>').join(''):'<tr><td colspan="3" class="note">لا توجد رموز مستبعدة في هذا الفحص.</td></tr>';
 }
+
+const PAPER_KEY='cgh_paper_test_v1',PAPER_COST_PCT=1.5;
+function paperLoad(){try{return JSON.parse(localStorage.getItem(PAPER_KEY)||'null')}catch(e){return null}}
+function paperSave(data){try{localStorage.setItem(PAPER_KEY,JSON.stringify(data));return true}catch(e){$('paperStatus').textContent='تعذر الحفظ محلياً في هذا المتصفح؛ تحقق من مساحة التخزين أو إعدادات الخصوصية.';return false}}
+function paperRender(){
+ const d=paperLoad(),trades=d?.trades||[],closed=trades.filter(t=>t.status==='closed'),open=trades.filter(t=>t.status==='open');
+ const net=closed.map(t=>Number(t.netPct)).filter(Number.isFinite),avg=net.length?net.reduce((a,b)=>a+b,0)/net.length:null;
+ $('paperCount').textContent=trades.length;$('paperOpen').textContent=open.length;$('paperClosed').textContent=closed.length;
+ $('paperNet').textContent=avg==null?'—':(avg>0?'+':'')+avg.toFixed(2)+'%';
+ $('startPaper').disabled=!!d?.startedAt;
+ $('startPaper').textContent=d?.startedAt?'الاختبار بدأ':'ابدأ اختبار 7 أيام';
+ if(d?.startedAt){const elapsed=Math.max(0,Math.floor((Date.now()-d.startedAt)/86400000));$('paperStatus').textContent=elapsed>=7?'انتهت فترة الاختبار الأولية. راجع النتائج أدناه.':'بدأ الاختبار: '+new Date(d.startedAt).toLocaleString('ar-AE')+' — اليوم '+(elapsed+1)+' من 7.'}
+ else $('paperStatus').textContent='لم يبدأ الاختبار بعد. ابدأه لتسجيل الإشارات القادمة.';
+ $('paperRows').innerHTML=trades.length?trades.slice().reverse().map(t=>{
+  const pct=t.status==='closed'?t.netPct:((t.lastPrice/t.entry-1)*100-PAPER_COST_PCT);
+  const cls=pct>=0?'paper-positive':'paper-negative';
+  return '<div class="paper-row"><div><strong>'+esc(t.symbol)+'</strong> <span class="muted">('+esc(t.network)+')</span><br><span class="muted">'+new Date(t.openedAt).toLocaleString('ar-AE')+'</span></div><div>الدخول: <strong>'+price(t.entry)+'</strong><br>آخر سعر: '+price(t.lastPrice)+'</div><div><span class="'+cls+'">'+(pct>0?'+':'')+pct.toFixed(2)+'% صافي تقديري</span><br><span class="muted">'+(t.status==='open'?'مفتوحة':'مغلقة: '+esc(t.exitReason||'خروج'))+'</span></div></div>';
+ }).join(''):'<p class="note">لا توجد صفقات افتراضية حتى الآن.</p>';
+}
+function paperProcess(items){
+ const d=paperLoad();if(!d?.startedAt)return;
+ if(Date.now()-d.startedAt>7*86400000){paperRender();return}
+ d.trades=d.trades||[];
+ const byKey=new Map(items.map(x=>[x.p.chainId+':'+x.p.baseToken.address.toLowerCase(),x]));
+ d.trades.forEach(t=>{
+  if(t.status!=='open')return;
+  const x=byKey.get(t.key);if(!x||!Number.isFinite(+x.p.priceUsd))return;
+  const px=+x.p.priceUsd;t.lastPrice=px;t.updatedAt=Date.now();
+  let reason='';
+  if(px<=t.stop)reason='وقف الخسارة';
+  else if(px>=t.t4)reason='الهدف 4';
+  else if(px>=t.t3)reason='الهدف 3';
+  else if(px>=t.t2)reason='الهدف 2';
+  else if(px>=t.t1)reason='الهدف 1';
+  if(reason){t.status='closed';t.exitPrice=px;t.exitAt=Date.now();t.exitReason=reason;t.grossPct=(px/t.entry-1)*100;t.netPct=t.grossPct-PAPER_COST_PCT}
+ });
+ items.forEach(x=>{
+  const f=x.candles?.fib,p=x.p,px=Number(p.priceUsd),key=p.chainId+':'+String(p.baseToken.address||'').toLowerCase();
+  if(f?.status!=='مرشح دخول'||!Number.isFinite(px)||d.trades.some(t=>t.key===key))return;
+  d.trades.push({key,symbol:p.baseToken.symbol||p.baseToken.name||'غير معروف',network:p.chainId,entry:px,lastPrice:px,stop:Number(f.stop),t1:Number(f.t1),t2:Number(f.t2),t3:Number(f.t3),t4:Number(f.t4),status:'open',openedAt:Date.now(),updatedAt:Date.now()});
+ });
+ paperSave(d);paperRender();
+}
+$('startPaper').onclick=()=>{
+ if(paperLoad()?.startedAt)return;
+ if(paperSave({startedAt:Date.now(),trades:[]})){paperRender();$('paperStatus').textContent='بدأ الاختبار الآن. ستُسجل الإشارات المؤهلة عند الفحوصات القادمة.'}
+};
+$('deletePaper').onclick=()=>{
+ if(!confirm('هل تريد حذف سجل الاختبار الافتراضي بالكامل من هذا المتصفح؟ لا يمكن التراجع عن الحذف.'))return;
+ try{localStorage.removeItem(PAPER_KEY);paperRender()}catch(e){$('paperStatus').textContent='تعذر حذف السجل من هذا المتصفح.'}
+};
+paperRender();
+
 $('go').onclick=run;
 
 const EXPLORERS={solana:'https://solscan.io/token/',ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'};
