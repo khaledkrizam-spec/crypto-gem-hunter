@@ -232,6 +232,24 @@ async function secSol(a){
  }catch(e){return null}
 }
 
+// GeckoTerminal OHLCV: شموع للمرشحين النهائيين فقط (بحد أقصى 5 طلبات لكل فحص)
+const GT_NETWORK={solana:'solana',ethereum:'eth',bsc:'bsc',base:'base',arbitrum:'arbitrum',polygon:'polygon_pos',avalanche:'avax',optimism:'optimism'};
+async function candleAnalysis(p){
+ const network=GT_NETWORK[p.chainId],pool=p.pairAddress;if(!network||!pool)return null;
+ try{
+  const url=`https://api.geckoterminal.com/api/v2/networks/${network}/pools/${encodeURIComponent(pool)}/ohlcv/hour?aggregate=1&limit=100&currency=usd`;
+  const j=await fj(url,15000),raw=j?.data?.attributes?.ohlcv_list;if(!Array.isArray(raw))return null;
+  const candles=raw.map(x=>({t:Number(x[0]),o:Number(x[1]),h:Number(x[2]),l:Number(x[3]),c:Number(x[4]),v:Number(x[5])})).filter(x=>[x.t,x.o,x.h,x.l,x.c].every(Number.isFinite)).sort((a,b)=>a.t-b.t);
+  if(candles.length<15)return {count:candles.length,insufficient:true};
+  const changes=[];for(let i=1;i<candles.length;i++)changes.push(candles[i].c-candles[i-1].c);
+  const recent=changes.slice(-14),gains=recent.reduce((a,x)=>a+Math.max(x,0),0)/14,losses=recent.reduce((a,x)=>a+Math.max(-x,0),0)/14;
+  const rsi=losses===0?100:100-(100/(1+gains/losses));
+  const last=candles[candles.length-1],prior=candles[Math.max(0,candles.length-7)],move=prior.c?((last.c/prior.c)-1)*100:0;
+  const window=candles.slice(-24),low=Math.min(...window.map(x=>x.l)),high=Math.max(...window.map(x=>x.h));
+  return {count:candles.length,rsi,move,low,high,lastClose:last.c,updatedAt:last.t};
+ }catch(e){return null}
+}
+
 // التقييم
 function score(p,sec,c){
  const liq=p.liquidity?.usd||0,vol=p.volume?.h24||0,mc=p.marketCap||p.fdv||0,tx=p.txns?.h24||{buys:0,sells:0},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells;
@@ -314,6 +332,9 @@ async function run(){
   results.forEach(({p,r})=>{if(!r.verified)log.push([p.baseToken.symbol,p.chainId,'لم يصل تقرير أمان صالح؛ استبعاد من قائمة المراجعة النهائية'])});
   results.forEach(({p,r})=>{if(r.hard.length)log.push([p.baseToken.symbol,p.chainId,'مخاطر حرجة: '+r.hard.join('، ')])});
   results.sort((a,b)=>b.r.s-a.r.s);
+  const candleTargets=results.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).slice(0,5);
+  $('st').textContent=`تحليل الشموع للمرشحين (${candleTargets.length}) عبر GeckoTerminal…`;
+  await Promise.all(candleTargets.map(async x=>{x.candles=await candleAnalysis(x.p)}));
   render(results,log,sel.length);
   $('st').textContent='اكتمل الفرز. المعروض بحد أقصى 5 رموز اجتازت فلاتر السوق وفحص الأمان المتاح؛ الشريعة والارتباطات المؤسسية ما زالت تتطلب مراجعة بشرية.';
  }catch(e){$('st').textContent='تعذر الجلب: '+e.message+'. تحقق من الاتصال وأعد المحاولة.'}
@@ -335,11 +356,12 @@ function drawCharts(items){
  scoreChartInstance=new Chart(a,{type:'bar',data:{labels,datasets:[{data:scores,backgroundColor:'#4da3ff',borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{min:0,max:100,ticks:{color:'#a9bdd5'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}}}});
  changeChartInstance=new Chart(b,{type:'bar',data:{labels,datasets:[{data:changes,backgroundColor:changes.map(v=>v>=0?'#42d392':'#ff6b75'),borderRadius:7,maxBarThickness:34}]},options:{...base,indexAxis:'y',scales:{x:{ticks:{color:'#a9bdd5',callback:v=>v+'%'},grid:{color:'#233650'}},y:{ticks:{color:'#e8f0fb'},grid:{display:false}}},plugins:{...base.plugins,tooltip:{...base.plugins.tooltip,callbacks:{label:c=>c.raw.toFixed(2)+'%'}}}}});
 }
-function candidateAdvice(p,r){
+function candidateAdvice(p,r,candles){
  const liq=Number(p.liquidity?.usd||0),vol=Number(p.volume?.h24||0),ch=Number(p.priceChange?.h24||0),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,buyRatio=n?buys/n:0,advice=[];
- if(ch>35)advice.push('لا تطارد الارتفاع الحالي. انتظر هدوء الحركة وإعادة اختبار منطقة سعرية ثابتة؛ لا تتوفر بيانات شموع كافية لتحديد دعم رقمي.');
- else if(ch<-15)advice.push('لا تلتقط الهبوط تلقائياً. انتظر توقف القمم والقيعان الهابطة وعودة حجم شراء مستقر.');
- else advice.push('ضعها في قائمة المراقبة فقط، وانتظر تأكيد استمرار السيولة والنشاط قبل التفكير في الدخول.');
+ if(ch>35)advice.push('لا تطارد الارتفاع الحالي؛ انتظر هدوء الحركة وإعادة اختبار السعر.');
+ else if(ch<-15)advice.push('لا تلتقط الهبوط تلقائياً؛ انتظر توقف القمم والقيعان الهابطة.');
+ else advice.push('ضعها في قائمة المراقبة فقط، وانتظر تأكيد استمرار السيولة والنشاط.');
+ if(candles?.rsi!=null){if(candles.rsi>=70)advice.push('RSI على إطار الساعة مرتفع؛ تجنب مطاردة حركة ممتدة وانتظر تهدئة الزخم.');else if(candles.rsi<=30)advice.push('RSI منخفض؛ هذا لا يعني أن السعر وصل للقاع. انتظر إشارة انعكاس مؤكدة.');}
  if(liq<75000)advice.push('السيولة محدودة نسبياً؛ الانزلاق السعري قد يكون كبيراً.');
  if(n&&buyRatio>0.72)advice.push('هيمنة الشراء مرتفعة؛ راقب احتمال اندفاع قصير أو تداول غير متوازن.');
  if(vol/Math.max(liq,1)>8)advice.push('حجم التداول مرتفع جداً نسبةً للسيولة؛ تحقق من جودة التداول وتكرار المحافظ.');
@@ -349,17 +371,18 @@ function render(res,log,tot){
  const c=cfg(),eligible=res.filter(x=>x.r.verified&&!x.r.hard.length&&x.r.s>=45).sort((a,b)=>b.r.s-a.r.s),shown=eligible.slice(0,5);
  $('s1').textContent=tot;$('s2').textContent=res.filter(x=>x.r.verified&&!x.r.hard.length).length;$('s3').textContent=shown.length;
  $('s4').textContent=new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});drawCharts(shown);
- const cards=shown.map(({p,r},i)=>{
-  const a=candidateAdvice(p,r),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,ch=Number(p.priceChange?.h24||0),age=Number.isFinite(r.age)?r.age.toFixed(1)+' يوم':'غير متاح',cap=p.marketCap?money(p.marketCap):money(p.fdv)+' FDV';
+ const cards=shown.map(({p,r,candles},i)=>{
+  const a=candidateAdvice(p,r,candles),tx=p.txns?.h24||{},buys=Number(tx.buys)||0,sells=Number(tx.sells)||0,n=buys+sells,ch=Number(p.priceChange?.h24||0),age=Number.isFinite(r.age)?r.age.toFixed(1)+' يوم':'غير متاح',cap=p.marketCap?money(p.marketCap):money(p.fdv)+' FDV';
   const badge=r.s>=c.thr?'مراقبة ذات أولوية':'مراقبة حذرة',li=(arr,cls)=>arr.length?arr.map(x=>'<span class="signal '+cls+'">'+esc(x)+'</span>').join(''):'<span class="signal warn">لا توجد بيانات كافية لإثبات ذلك</span>',risks=a.risks.length?li(a.risks,'risk'):'<span class="signal">لم يرصد الفاحص خطراً حرجاً ضمن البيانات المتاحة</span>';
   const addr=esc(p.baseToken.address||''),explorer=p.chainId==='solana'?'https://solscan.io/token/'+encodeURIComponent(addr):({ethereum:'https://etherscan.io/token/',bsc:'https://bscscan.com/token/',base:'https://basescan.org/token/',arbitrum:'https://arbiscan.io/token/',polygon:'https://polygonscan.com/token/',avalanche:'https://snowtrace.io/token/',optimism:'https://optimistic.etherscan.io/token/'}[p.chainId]||'')+encodeURIComponent(addr);
   return '<article class="candidate-card"><div class="candidate-top"><div class="token-id"><div class="token-avatar">'+esc((p.baseToken.symbol||'?').slice(0,3).toUpperCase())+'</div><div class="token-title"><h3>'+esc(p.baseToken.name||p.baseToken.symbol||'رمز غير مسمى')+'</h3><p>'+esc(p.baseToken.symbol||'—')+' · '+esc(p.chainId)+' · عمر الزوج '+age+'</p></div></div><div class="score-block"><div class="score-number">'+r.s+'<small style="font-size:11px;color:#8da9c5">/100</small></div><div class="score-caption">مؤشر السوق</div></div></div>'+
   '<div class="card-footer"><span class="tag '+(r.s>=c.thr?'ok':'wa')+'">'+badge+'</span><span class="rank-badge">الترتيب #'+(i+1)+'</span></div>'+
   '<div class="token-metrics"><div class="metric"><span>السعر الحالي</span><b>'+price(p.priceUsd)+'</b></div><div class="metric"><span>القيمة السوقية</span><b>'+cap+'</b></div><div class="metric"><span>السيولة</span><b>'+money(p.liquidity?.usd)+'</b></div><div class="metric"><span>حجم 24 ساعة</span><b>'+money(p.volume?.h24)+'</b></div><div class="metric"><span>تغير 24 ساعة</span><b class="'+(ch>=0?'positive':'negative')+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</b></div><div class="metric"><span>الصفقات / 24 ساعة</span><b>'+n.toLocaleString('en-US')+'</b></div><div class="metric"><span>شراء مقابل بيع</span><b>'+(n?(buys/n*100).toFixed(0)+'% / '+(sells/n*100).toFixed(0)+'%':'غير متاح')+'</b></div><div class="metric"><span>حجم التداول / السيولة</span><b>'+(p.liquidity?.usd?(p.volume?.h24/p.liquidity.usd).toFixed(2)+'x':'—')+'</b></div></div>'+
+  '<div class="card-section"><h4>تحليل الشموع — GeckoTerminal (ساعة)</h4><div class="signal-list">'+(candles?.rsi!=null?'<span class="signal '+(candles.rsi>=70?'warn':candles.rsi<=30?'risk':'')+'">RSI: '+candles.rsi.toFixed(1)+'</span><span class="signal">حركة آخر 6 ساعات: '+(candles.move>0?'+':'')+candles.move.toFixed(2)+'%</span><span class="signal">نطاق آخر 24 شمعة: '+price(candles.low)+' – '+price(candles.high)+'</span><span class="signal">شموع متاحة: '+candles.count+'</span>':'<span class="signal warn">بيانات الشموع غير كافية أو لم تصل من المصدر</span>')+'</div><p class="note">RSI مؤشر زخم وليس إشارة شراء مستقلة. النطاق السعري ليس ضماناً للدعم أو المقاومة.</p></div>'+
   '<div class="card-section"><h4>لماذا ظهر هذا المرشح؟</h4><div class="signal-list">'+li(a.pros,'')+'</div></div>'+
   '<div class="card-section"><h4>المخاطر والتنبيهات</h4><div class="signal-list">'+risks+'</div></div>'+
   '<div class="verification-list"><div class="verification-item">توزيع كبار الحائزين: غير متحقق</div><div class="verification-item">التوافق الشرعي: غير متحقق</div><div class="verification-item">الارتباطات المؤسسية: غير متحققة</div></div>'+
-  '<div class="recommendation"><strong>التوصية العملية</strong><p>'+a.advice.map(esc).join(' ')+'<br><b>الخلاصة:</b> مراقبة فقط، وليس أمر شراء. لا يوجد سعر دخول أو هدف رقمي لأن بيانات الشموع والدعم والمقاومة غير متاحة في هذا الفحص.</p></div>'+
+  '<div class="recommendation"><strong>التوصية العملية</strong><p>'+a.advice.map(esc).join(' ')+'<br><b>الخلاصة:</b> مراقبة فقط، وليس أمر شراء. مؤشرات الشموع تساعد في قراءة الزخم والنطاق السعري، لكنها لا تثبت دعماً أو مقاومة ولا تضمن سعراً مناسباً للدخول.</p></div>'+
   '<div class="card-footer"><div class="token-links"><a href="'+esc(p.url||'#')+'" target="_blank" rel="noopener">السوق والرسم ↗</a><a href="'+explorer+'" target="_blank" rel="noopener">مستكشف العقد ↗</a></div><span class="note" dir="ltr">'+addr.slice(0,7)+'…'+addr.slice(-5)+'</span></div></article>';
  }).join('');
  $('candidateGrid').innerHTML=cards||'<div class="empty-state"><div class="empty-icon">⌁</div><h3>لم يظهر مرشح يستوفي شروط العرض</h3><p>لم نعثر على خمسة مرشحين مؤهلين. لن نملأ القائمة بعملات ضعيفة أو بفحوص أمان ناقصة. أعد الفحص لاحقاً أو راجع أسباب الاستبعاد.</p></div>';
