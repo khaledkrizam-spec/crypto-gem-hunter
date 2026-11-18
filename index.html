@@ -246,8 +246,51 @@ async function candleAnalysis(p){
   const rsi=losses===0?100:100-(100/(1+gains/losses));
   const last=candles[candles.length-1],prior=candles[Math.max(0,candles.length-7)],move=prior.c?((last.c/prior.c)-1)*100:0;
   const window=candles.slice(-24),low=Math.min(...window.map(x=>x.l)),high=Math.max(...window.map(x=>x.h));
-  return {count:candles.length,rsi,move,low,high,lastClose:last.c,updatedAt:last.t};
+  const hourly={lastOpen:last.o,lastHigh:last.h,prevHigh:candles[candles.length-2]?.h,lastClose:last.c};
+  const fib=await fibonacciPlan(p,last.c,hourly);
+  return {count:candles.length,rsi,move,low,high,lastClose:last.c,updatedAt:last.t,fib};
  }catch(e){return null}
+}
+
+// Fibonacci: 4h structure + 1h entry confirmation
+async function fibonacciPlan(p,currentPrice,hourly){
+ const network=GT_NETWORK[p.chainId],pool=p.pairAddress;
+ if(!network||!pool)return {status:'غير متاح',reason:'الشبكة أو مجمع التداول غير مدعوم'};
+ try{
+  const url=`https://api.geckoterminal.com/api/v2/networks/${network}/pools/${encodeURIComponent(pool)}/ohlcv/hour?aggregate=4&limit=100&currency=usd`;
+  const j=await fj(url,15000),raw=j?.data?.attributes?.ohlcv_list;
+  if(!Array.isArray(raw))return {status:'غير مكتمل',reason:'لم تصل شموع 4 ساعات'};
+  const cs=raw.map(x=>({t:+x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]})).filter(x=>[x.t,x.o,x.h,x.l,x.c].every(Number.isFinite)).sort((a,b)=>a.t-b.t);
+  if(cs.length<25)return {status:'غير مكتمل',reason:'نحتاج 25 شمعة 4 ساعات على الأقل'};
+  const lows=[],highs=[];
+  for(let i=3;i<cs.length-3;i++){
+   if(cs[i].l<Math.min(...cs.slice(i-3,i).map(x=>x.l))&&cs[i].l<=Math.min(...cs.slice(i+1,i+4).map(x=>x.l)))lows.push({i,v:cs[i].l});
+   if(cs[i].h>Math.max(...cs.slice(i-3,i).map(x=>x.h))&&cs[i].h>=Math.max(...cs.slice(i+1,i+4).map(x=>x.h)))highs.push({i,v:cs[i].h});
+  }
+  let leg=null;
+  for(let k=highs.length-1;k>=0&&!leg;k--){
+   const b=highs[k],a=[...lows].reverse().find(x=>x.i<b.i&&b.v>x.v*1.12);
+   const c=lows.findLast?lows.findLast(x=>x.i>b.i):[...lows].reverse().find(x=>x.i>b.i);
+   if(a&&c&&c.v>a.v&&c.v<b.v)leg={a:a.v,b:b.v,c:c.v,bi:b.i,ci:c.i};
+  }
+  if(!leg)return {status:'لا توجد موجة واضحة',reason:'لم تتحدد موجة صاعدة مكتملة بقاع وقمة وتصحيح صالحين'};
+  const range=leg.b-leg.a,retrace=(leg.b-leg.c)/range;
+  if(retrace<0.25||retrace>0.85)return {status:'لا توجد موجة واضحة',reason:'عمق التصحيح خارج النطاق المقبول',retrace};
+  const entryLow=leg.b-range*0.618,entryHigh=leg.b-range*0.5,entryMid=(entryLow+entryHigh)/2;
+  const stop=leg.c-range*0.08;
+  const t1=leg.c+range*1.0,t2=leg.c+range*1.618,t3=leg.c+range*2.0,t4=leg.c+range*2.618;
+  const inZone=currentPrice>=entryLow&&currentPrice<=entryHigh;
+  const confirmed=hourly&&hourly.lastOpen!=null&&hourly.prevHigh!=null&&hourly.lastClose>hourly.lastOpen&&hourly.lastClose>hourly.prevHigh;
+  const return2=(t2/entryMid-1)*100,rr=(t2-entryMid)/Math.max(entryMid-stop,1e-18);
+  let status='انتظار';
+  let reason='انتظر وصول السعر إلى نطاق 0.5–0.618 ثم تأكيداً صاعداً على إطار الساعة';
+  if(inZone&&!confirmed){status='انتظار التأكيد';reason='السعر داخل منطقة فيبوناتشي، لكن شمعة الساعة لم تؤكد الارتداد بعد'}
+  else if(inZone&&confirmed&&return2>=100&&rr>=3){status='مرشح دخول';reason='السعر داخل منطقة الدخول، وظهر تأكيد صاعد، والهدف الثاني يحقق شروط العائد/المخاطرة'}
+  else if(inZone&&confirmed){status='غير مناسب';reason='تأكيد سعري موجود، لكن العائد المتوقع أو نسبة العائد إلى المخاطرة لا تحقق شروط الاستراتيجية'}
+  else if(currentPrice>entryHigh){status='انتظار إعادة اختبار';reason='السعر أعلى منطقة الدخول؛ لا تطارد الحركة وانتظر إعادة اختبار'}
+  else if(currentPrice<entryLow){status='انتظار';reason='السعر أسفل منطقة الدخول؛ نحتاج إعادة تقييم الموجة وعدم افتراض الارتداد'}
+  return {status,reason,a:leg.a,b:leg.b,c:leg.c,retrace,entryLow,entryHigh,stop,t1,t2,t3,t4,return2,rr,confirmed};
+ }catch(e){return {status:'غير متاح',reason:'تعذر تحميل بيانات فيبوناتشي من المصدر'};}
 }
 
 // التقييم
@@ -406,6 +449,7 @@ function render(res,log,tot){
   '<div class="card-footer"><span class="tag '+(r.s>=c.thr?'ok':'wa')+'">'+badge+'</span><span class="rank-badge">الترتيب #'+(i+1)+'</span></div>'+
   '<div class="token-metrics"><div class="metric"><span>السعر الحالي</span><b>'+price(p.priceUsd)+'</b></div><div class="metric"><span>القيمة السوقية</span><b>'+cap+'</b></div><div class="metric"><span>السيولة</span><b>'+money(p.liquidity?.usd)+'</b></div><div class="metric"><span>حجم 24 ساعة</span><b>'+money(p.volume?.h24)+'</b></div><div class="metric"><span>تغير 24 ساعة</span><b class="'+(ch>=0?'positive':'negative')+'">'+(ch>0?'+':'')+ch.toFixed(2)+'%</b></div><div class="metric"><span>الصفقات / 24 ساعة</span><b>'+n.toLocaleString('en-US')+'</b></div><div class="metric"><span>متوسط الصفقة التقريبي</span><b>'+(n?money((p.volume?.h24||0)/n):'—')+'</b></div><div class="metric"><span>شراء مقابل بيع</span><b>'+(n?(buys/n*100).toFixed(0)+'% / '+(sells/n*100).toFixed(0)+'%':'غير متاح')+'</b></div><div class="metric"><span>حجم التداول / السيولة</span><b>'+(p.liquidity?.usd?(p.volume?.h24/p.liquidity.usd).toFixed(2)+'x':'—')+'</b></div></div>'+
   '<div class="card-section"><h4>تحليل الشموع — GeckoTerminal (ساعة)</h4><div class="signal-list">'+(candles?.rsi!=null?'<span class="signal '+(candles.rsi>=70?'warn':candles.rsi<=30?'risk':'')+'">RSI: '+candles.rsi.toFixed(1)+'</span><span class="signal">حركة آخر 6 ساعات: '+(candles.move>0?'+':'')+candles.move.toFixed(2)+'%</span><span class="signal">نطاق آخر 24 شمعة: '+price(candles.low)+' – '+price(candles.high)+'</span><span class="signal">شموع متاحة: '+candles.count+'</span>':'<span class="signal warn">بيانات الشموع غير كافية أو لم تصل من المصدر</span>')+'</div><p class="note">RSI مؤشر زخم وليس إشارة شراء مستقلة. النطاق السعري ليس ضماناً للدعم أو المقاومة.</p></div>'+
+  '<div class="card-section"><h4>خطة فيبوناتشي — 4 ساعات / تأكيد ساعة</h4>'+ (candles?.fib?'<div class="signal-list"><span class="signal '+(candles.fib.status==='مرشح دخول'?'ok':candles.fib.status==='غير مناسب'?'risk':'warn')+'">'+esc(candles.fib.status)+'</span><span class="signal">منطقة الدخول: '+price(candles.fib.entryLow)+' – '+price(candles.fib.entryHigh)+'</span><span class="signal">وقف الخسارة: '+price(candles.fib.stop)+'</span><span class="signal">الهدف 1 (1.0): '+price(candles.fib.t1)+'</span><span class="signal">الهدف 2 (1.618): '+price(candles.fib.t2)+'</span><span class="signal">الهدف 3 (2.0): '+price(candles.fib.t3)+'</span><span class="signal">الهدف الممتد (2.618): '+price(candles.fib.t4)+'</span><span class="signal">العائد النظري للهدف 2: '+candles.fib.return2.toFixed(1)+'%</span><span class="signal">العائد/المخاطرة للهدف 2: '+candles.fib.rr.toFixed(2)+' : 1</span></div><p class="note">'+esc(candles.fib.reason)+'. هذه مستويات آلية أولية وليست أمراً تنفيذياً؛ تحقّق من الرسوم والسيولة والانزلاق قبل أي صفقة.</p>':'<p class="note">لم تتوفر بيانات كافية لبناء خطة فيبوناتشي موثوقة؛ لا توجد إشارة دخول.</p>')+'</div>'+
   '<div class="card-section"><h4>لماذا ظهر هذا المرشح؟</h4><div class="signal-list">'+li(a.pros,'')+'</div></div>'+
   '<div class="card-section"><h4>المخاطر والتنبيهات</h4><div class="signal-list">'+risks+'</div></div>'+
   '<div class="verification-list"><div class="verification-item">توزيع كبار الحائزين: غير متحقق</div><div class="verification-item">التوافق الشرعي: غير متحقق</div><div class="verification-item">الارتباطات المؤسسية: غير متحققة</div></div>'+
