@@ -392,7 +392,7 @@ async function run(){
   results.sort((a,b)=>b.r.s-a.r.s);
   render(results,log,sel.length);
   $('st').textContent='اكتمل الفرز. المعروض بحد أقصى 5 رموز اجتازت فلاتر السوق وفحص الأمان المتاح؛ الشريعة والارتباطات المؤسسية ما زالت تتطلب مراجعة بشرية.';
- }catch(e){$('st').textContent='تعذر الجلب: '+e.message+'. تحقق من الاتصال وأعد المحاولة.'}
+ }catch(e){console.error('CRYPTO_GEM_HUNTER_SCAN_ERROR',e);const frame=(e&&e.stack?String(e.stack).split('\n').slice(1,3).join(' | '):'');$('st').textContent='تعذر الجلب: '+(e?.message||'خطأ غير معروف')+(frame?' — '+frame:'')+'. أرسل نص هذا الخطأ للدعم.'}
  $('go').disabled=false;
 }
 let scoreChartInstance=null,changeChartInstance=null;
